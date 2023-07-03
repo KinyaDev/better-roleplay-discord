@@ -1,0 +1,42 @@
+{
+  "dependencies": {
+    "axios": "^1.4.0",
+    "better-sqlite3": "^8.4.0",
+    "discord.js": "^14.11.0",
+    "dotenv": "^16.0.3",
+    "is-image-url": "^1.1.8",
+    "mongodb": "^5.5.0",
+    "mysql2": "^3.3.3",
+    "path": "^0.12.7"
+  },
+  "name": "better-roleplay-discord",
+  "description": "A Discord Bot For Custom Roleplay Character Statistics",
+  "version": "1.0.0",
+  "main": "bot.js",
+  "scripts": {
+    "build": "npx tsc",
+    "start": "node bot.js"
+  },
+  "author": "KinyaDev",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.4",
+    "@types/node": "^20.2.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KinyaDev/better-roleplay-discord.git"
+  },
+  "keywords": [
+    "roleplay",
+    "better-roleplay",
+    "discord",
+    "bot",
+    "tupperbox",
+    "tuppers"
+  ],
+  "bugs": {
+    "url": "https://github.com/KinyaDev/better-roleplay-discord/issues"
+  },
+  "homepage": "https://github.com/KinyaDev/better-roleplay-discord#readme"
+}
