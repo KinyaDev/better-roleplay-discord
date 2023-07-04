@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require("discord.js");
-const DB = require("../modules/db");
+const { AutoProxyAPI } = require("../modules/db");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -13,7 +13,7 @@ module.exports = {
    * @param {import("discord.js").CommandInteraction} interaction
    */
   run: async (client, interaction, db, langdata) => {
-    let autoproxy = DB.autoProxy(interaction.member.id);
+    let autoproxy = new AutoProxyAPI(interaction.member.id);
 
     autoproxy.init();
 

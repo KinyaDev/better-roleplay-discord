@@ -1,8 +1,8 @@
 const { EmbedBuilder } = require("discord.js");
-const { users } = require("./db");
+const { CharactersAPI } = require("./db");
 
 async function CharaEmbed(chara, member) {
-  let db = users(member.id);
+  let db = new CharactersAPI(member.id);
 
   let statsToAppend = "";
 

@@ -3,9 +3,12 @@ const {
   ChatInputCommandInteraction,
   CategoryChannel,
   Client,
+  StringSelectMenuBuilder,
+  ActionRowBuilder,
+  ComponentType,
 } = require("discord.js");
 
-const { guild } = require("../modules/db");
+const { guild, GuildAPI, CharactersAPI } = require("../modules/db");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -41,16 +44,6 @@ module.exports = {
               "Category IDs to be marked as roleplay places, seperated by comma."
             )
             .setRequired(true)
-        )
-    )
-    .addSubcommand((sc) =>
-      sc
-        .setName("travel")
-        .setDescription(
-          "Traverse between places with the /place-system travel command."
-        )
-        .addStringOption((opt) =>
-          opt.setName("name").setDescription("Place name.").setRequired(true)
         )
     )
     .addSubcommand((sc) =>
@@ -98,8 +91,9 @@ module.exports = {
    */
   run: async (client, interaction, db, langdata) => {
     if (interaction.isChatInputCommand()) {
-      let rp = guild(interaction.guildId);
+      let rp = new GuildAPI(interaction.guildId);
       let enabled = await rp.isEnabled();
+      let db = new CharactersAPI(interaction.member.id);
 
       if (interaction.options.getSubcommand() === "link") {
         if (interaction.memberPermissions.has("Administrator")) {
@@ -109,7 +103,7 @@ module.exports = {
 
             if (ids1) {
               interaction.editReply({
-                content: langdata.link.replace("$", id1).replace(
+                content: langdata.link.replace("$", `<#${id1}>`).replace(
                   "$1",
                   ids1
                     .split(",")
@@ -172,89 +166,6 @@ module.exports = {
         } else {
           interaction.editReply({
             content: langdata["no-perm"],
-            ephemeral: true,
-          });
-        }
-      } else if (interaction.options.getSubcommand() === "travel") {
-        if (enabled) {
-          let aimName = interaction.options.getString("name");
-          let aim = interaction.guild.channels.cache.find(
-            (c) => c.name.toLowerCase() === aimName.toLowerCase()
-          );
-          console.log(aim);
-
-          /**
-           * @type {string[]}
-           */
-          let channels = await rp.channels();
-
-          function getChildren(id) {
-            return interaction.guild.channels.cache.filter(
-              (c) => c.parentId === id
-            );
-          }
-
-          if (channels.includes(aim.id)) {
-            let accessibleChannels = await rp.linkeds(
-              interaction.channel.parentId
-            );
-            if (accessibleChannels.includes(aim.id)) {
-              let toHide = channels.filter((id) => id !== aim.id);
-              toHide.forEach(async (id) => {
-                let ch = await interaction.guild.channels.fetch(id);
-
-                getChildren(ch.id).forEach((c) => {
-                  c.permissionOverwrites.edit(interaction.member.id, {
-                    ViewChannel: false,
-                  });
-                });
-
-                ch.permissionOverwrites.edit(interaction.member.id, {
-                  ViewChannel: false,
-                });
-              });
-
-              getChildren(aim.id).forEach((c) => {
-                c.permissionOverwrites.edit(interaction.member.id, {
-                  ViewChannel: true,
-                });
-              });
-
-              aim.permissionOverwrites.edit(interaction.member.id, {
-                ViewChannel: true,
-              });
-
-              let chara = db.getSelected();
-
-              interaction.editReply({
-                content: `${
-                  chara ? chara.name : interaction.member.user
-                } travels to ${aim}`,
-                ephemeral: false,
-              });
-            } else {
-              interaction.editReply({
-                content: langdata.noaccrp.replace(
-                  "$",
-                  accessibleChannels.map((ac) => `<#${ac}>`)
-                ),
-                ephemeral: true,
-              });
-            }
-          } else {
-            interaction.editReply({
-              content: langdata.nochrp,
-              ephemeral: true,
-            });
-          }
-
-          // interaction.editReply({
-          //   content: langdata.norpcat.replace("$", channels2.join(", ")),
-          //   ephemeral: true,
-          // });
-        } else {
-          interaction.editReply({
-            content: langdata["no-rp"],
             ephemeral: true,
           });
         }

@@ -8,7 +8,7 @@ const {
   ActionRowBuilder,
   ComponentType,
 } = require("discord.js");
-const { users } = require("../modules/db");
+const { users, CharactersAPI } = require("../modules/db");
 const { CharaEmbed } = require("../modules/embeds");
 
 module.exports = {
@@ -29,7 +29,7 @@ module.exports = {
     let member = interaction.options.getUser("mention");
     if (!member) member = interaction.member.user;
 
-    let db = users(member ? member.id : interaction.member.id);
+    let db = new CharactersAPI(member ? member.id : interaction.member.id);
     let charas = await db.getCharas();
     let chara = (await db.getSelected()) || charas[0] || undefined;
 

@@ -3,11 +3,9 @@ const {
   ChatInputCommandInteraction,
   ActionRowBuilder,
   ButtonBuilder,
-  TextInputBuilder,
   Client,
   ButtonStyle,
 } = require("discord.js");
-const { readdirSync } = require("fs");
 const { helpEmbed, placeSystemEmbed } = require("../modules/embeds");
 
 module.exports = {
@@ -21,7 +19,7 @@ module.exports = {
    * @param {Client} client
    * @param {ChatInputCommandInteraction} interaction
    */
-  run: async (client, interaction, db, langdata) => {
+  run: async (client, interaction) => {
     let btn = new ButtonBuilder()
       .setCustomId("ask")
       .setLabel("Ask")

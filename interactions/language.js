@@ -4,7 +4,7 @@ const {
   ChatInputCommandInteraction,
   Client,
 } = require("discord.js");
-const { guild } = require("../modules/db");
+const { guild, GuildAPI } = require("../modules/db");
 let langs = Object.keys(require("../langs.json"));
 
 module.exports = {
@@ -26,7 +26,7 @@ module.exports = {
    * @param {ChatInputCommandInteraction} interaction
    */
   run: async (client, interaction, db) => {
-    let rp = guild(interaction.guildId);
+    let rp = new GuildAPI(interaction.guildId);
 
     let lang = interaction.options.getString("lang");
     if (langs.includes(lang)) {

@@ -4,6 +4,7 @@ const {
   ChatInputCommandInteraction,
 } = require("discord.js");
 const { CharaEmbed } = require("../modules/embeds");
+const isImageUrl = require("is-image-url");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -43,20 +44,29 @@ module.exports = {
     let avatar = interaction.options.getString("avatar");
     let bio = interaction.options.getString("bio");
     let species = interaction.options.getString("species");
+    if (avatar) {
+      if (isImageUrl(avatar)) {
+        await create();
+      } else {
+        interaction.editReply("Invalid image url");
+      }
+    } else await create();
 
-    let { _id } = await db.createCharacter(name, avatar);
-    if (bio) db.setBio(bio);
+    async function create() {
+      let { _id } = await db.createCharacter(name, avatar);
+      if (bio) db.setBio(bio);
 
-    if (species) {
-      db.setSpecies(species);
-    } else {
-      db.setSpecies("Human");
+      if (species) {
+        db.setSpecies(species);
+      } else {
+        db.setSpecies("Human");
+      }
+
+      let chara = await db.getChara(_id);
+      interaction.editReply({
+        content: langdata.register.replace("$", name),
+        embeds: [await CharaEmbed(chara, interaction.member.user)],
+      });
     }
-
-    let chara = await db.getChara(_id);
-    interaction.editReply({
-      content: langdata.register.replace("$", name),
-      embeds: [await CharaEmbed(chara, interaction.member.user)],
-    });
   },
 };

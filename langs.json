@@ -6,7 +6,7 @@
     "register": "Votre personnage $ a été créé.",
     "no-perm": "Vous n'avez pas les permission pour faire cette commande",
     "no-rp": "Les commandes de RP sont désactivés sur ce serveur.",
-    "noaccrp": "Vous n'avez pas accès à ce lien, vous pouvez à la place aller à: $",
+    "noaccrp": "Vous n'avez pas accès à ce lieu, vous pouvez à la place aller à: $",
     "nochrp": "Vous n'êtes pas dans un salon RP.",
     "norpcat": "Ce n'est pas une catégorie de roleplay. Les lieux actuellement disponible sont $.",
     "statdel": "$1 supprimé pour votre personnage $2",

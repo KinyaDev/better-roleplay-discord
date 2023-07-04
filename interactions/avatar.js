@@ -3,6 +3,7 @@ const {
   ChatInputCommandInteraction,
   Client,
 } = require("discord.js");
+const isImageUrl = require("is-image-url");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -25,12 +26,14 @@ module.exports = {
     let url = interaction.options.getString("avatar");
 
     if (db.getSelected()) {
-      db.setAvatar(url);
+      if (isImageUrl(url)) {
+        db.setAvatar(url);
 
-      interaction.editReply({
-        content: langdata.avatar,
-        ephemeral: true,
-      });
+        interaction.editReply({
+          content: langdata.avatar,
+          files: [url],
+        });
+      } else interaction.editReply("Invalid image url");
     } else {
       interaction.editReply({
         content: langdata["no-chara"],
