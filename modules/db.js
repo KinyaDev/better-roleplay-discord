@@ -204,6 +204,14 @@ class CharactersAPI {
       return chara;
     }
   }
+
+  async setLocation(channel_id) {
+    let chara = await this.getSelected();
+    charactersCollection.updateOne(
+      { _id: chara._id },
+      { $set: { location: channel_id } }
+    );
+  }
 }
 
 /**

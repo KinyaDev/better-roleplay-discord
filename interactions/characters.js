@@ -41,7 +41,12 @@ module.exports = {
       let button = new ButtonBuilder()
         .setCustomId("use-chara")
         .setLabel("Use")
-        .setDisabled(interaction.options.getUser("mention") ? true : false)
+        .setDisabled(
+          interaction.options.getUser("mention").username ===
+            interaction.user.username
+            ? false
+            : true
+        )
         .setEmoji("🎭")
         .setStyle(ButtonStyle.Primary);
 
@@ -56,7 +61,7 @@ module.exports = {
       let actionRow2 = new ActionRowBuilder().setComponents(selectMenu);
 
       let res = await interaction.editReply({
-        embeds: [await CharaEmbed(chara, member)],
+        embeds: [await CharaEmbed(chara, member, interaction.guild)],
         components: [actionRow2, actionRow1],
         fetchReply: true,
       });
@@ -73,7 +78,7 @@ module.exports = {
           if (chara.name === selection) {
             if (!ok) {
               interaction.editReply({
-                embeds: [await CharaEmbed(chara, member)],
+                embeds: [await CharaEmbed(chara, member, interaction.guild)],
               });
 
               ok = true;

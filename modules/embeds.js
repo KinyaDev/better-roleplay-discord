@@ -1,14 +1,11 @@
-const { EmbedBuilder } = require("discord.js");
+const { EmbedBuilder, Client } = require("discord.js");
 const { CharactersAPI } = require("./db");
 
-async function CharaEmbed(chara, member) {
+async function CharaEmbed(chara, member, guild) {
+  console.log(guild);
   let db = new CharactersAPI(member.id);
 
   let statsToAppend = "";
-
-  if (chara.species) {
-    statsToAppend += `__🐱 Species__: ${chara.species}\n\n`;
-  }
 
   let stats = await db.getStats(chara._id);
 
@@ -19,7 +16,7 @@ async function CharaEmbed(chara, member) {
     statsToAppend += ` **${s.name}**: ${s.value}\n`;
   });
 
-  return new EmbedBuilder()
+  let emb = new EmbedBuilder()
     .setAuthor({
       name: member.username,
       iconURL: member.displayAvatarURL(),
@@ -28,9 +25,19 @@ async function CharaEmbed(chara, member) {
     .setDescription(`${chara.bio || ""}\n\n${statsToAppend}`)
     .setThumbnail(chara.avatar)
     .setFooter({
-      text: `${member.id} - Character ID: ${(await db.indexOf(chara._id)) + 1}`,
-    })
-    .toJSON();
+      text: `Character ID: ${(await db.indexOf(chara._id)) + 1}`,
+    });
+
+  if (chara.species) {
+    emb.addFields({ name: "🐱 Species", value: chara.species });
+  } else emb.addFields({ name: "🐱 Species", value: "Human" });
+
+  if (chara.location) {
+    let ch = await guild.channels.fetch(chara.location);
+    emb.addFields({ name: "🗺️ Location", value: ch.name });
+  } else emb.addFields({ name: "🗺️ Location", value: "Nowhere" });
+
+  return emb.toJSON();
 }
 const helpEmbed = new EmbedBuilder()
   .setColor("#0099ff")
@@ -55,7 +62,7 @@ const helpEmbed = new EmbedBuilder()
     {
       name: "**Place System**",
       value:
-        "Enable/Disable: Customize the place system in your server by using the `/place-system enable` or `/place-system disable` command.\nChannels: Set up specific channels for roleplaying locations using the `/place-system channels [add/delete]` command.\nTravel: Traverse between different places within your roleplaying world with the `/place-system travel` command.\nReset: Reset the place system and clear all location data with the `/place-system reset` command.\nLink/Unlink: Connect or disconnect a roleplaying channel to the place system using the `/place-system link` or `/place-system unlink` command.",
+        "Enable/Disable: Customize the place system in your server by using the `/place-system enable` command.\nChannels: Set up specific channels for roleplaying locations using the `/place-system channels [add/delete]` command.\nTravel: Traverse between different places within your roleplaying world with the `/place-system travel` command.\nReset: Reset the place system and clear all location data with the `/place-system reset` command.\nLink/Unlink: Connect or disconnect a roleplaying channel to the place system using the `/place-system link` or `/place-system unlink` command.",
     },
     {
       name: "**Stats Management**",
@@ -84,7 +91,7 @@ const placeSystemEmbed = new EmbedBuilder()
     {
       name: "**Enable/Disable**",
       value:
-        "Enable or disable the place system in your server.\nUsage: `/place-system enable` or `/place-system disable`.",
+        "Enable or disable the place system in your server.\nUsage: `/place-system enable`, use that command again to disable.",
     },
     {
       name: "**Channels**",
@@ -94,7 +101,7 @@ const placeSystemEmbed = new EmbedBuilder()
     {
       name: "**Travel**",
       value:
-        "Traverse between different places within your roleplaying world.\nUsage: `/place-system travel`.",
+        "Traverse between different places within your roleplaying world.\nUsage: `/travel`.",
     },
     {
       name: "**Reset**",

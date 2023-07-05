@@ -118,6 +118,8 @@ module.exports = {
                 } travels to ${aim}`,
                 ephemeral: false,
               });
+
+              db.setLocation(aim.id);
             } else {
               i.reply({
                 content: `The select menu isn't for you!`,
