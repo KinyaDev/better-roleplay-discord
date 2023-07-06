@@ -13,10 +13,6 @@ const fs = require("fs");
 require("dotenv").config();
 
 const path = require("path");
-const useChara = require("./components/use-chara");
-const ask = require("./components/ask");
-const showChara = require("./components/showCharacter");
-const { AutoProxyAPI, CharactersAPI, GuildAPI } = require("./modules/db");
 
 const client = new Client({
   intents: [

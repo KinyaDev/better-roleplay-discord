@@ -1,6 +1,5 @@
 const { CharactersAPI, GuildAPI } = require("../modules/db");
 const ask = require("../components/ask");
-const useChara = require("../components/use-chara");
 const showChara = require("../components/showCharacter");
 module.exports = async (client, interaction) => {
   // Setup APIs
@@ -25,11 +24,6 @@ module.exports = async (client, interaction) => {
       interaction.options.data
     );
   } else {
-    /* Component Interaction in the interactions/characters.js command
-     * Set the character to be active.
-     */
-    useChara(interaction, db);
-
     /* Component Interaction in the interactions/help.js command
      * Button to ask a question and the question is sent in the questions channel of the support server
      */

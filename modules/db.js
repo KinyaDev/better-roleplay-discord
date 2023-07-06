@@ -16,11 +16,15 @@ const mongoClient = new MongoClient(process.env.MONGO_CONNECTION_STRING, {
   }
 })();
 
+let db = mongoClient.db("test");
+
 function clearDB() {
-  mongoClient.db().dropCollection("characters");
-  mongoClient.db().dropCollection("stats");
-  mongoClient.db().dropCollection("link_channels");
-  mongoClient.db().dropCollection("guilds");
+  db.dropCollection("characters");
+  db.dropCollection("stats");
+  db.dropCollection("link_channels");
+  db.dropCollection("guilds");
+  db.dropCollection("users");
+  db.dropCollection("keys");
 }
 
 /*
@@ -29,11 +33,52 @@ function clearDB() {
  */
 
 // Setup DB.
-const charactersCollection = mongoClient.db().collection("characters");
-const statsCollection = mongoClient.db().collection("stats");
-const linkChannelsCollection = mongoClient.db().collection("link_channels");
-const guildsCollection = mongoClient.db().collection("guilds");
-const usersCollection = mongoClient.db().collection("users");
+const charactersCollection = db.collection("characters");
+const statsCollection = db.collection("stats");
+const linkChannelsCollection = db.collection("link_channels");
+const guildsCollection = db.collection("guilds");
+const usersCollection = db.collection("users");
+const keysCollection = db.collection("keys");
+
+class KeyPlaceAPI {
+  /**
+   *
+   * @param {string} charaId
+   */
+  constructor(chara_id) {
+    this.chara_id = chara_id;
+  }
+
+  static async all() {
+    return await keysCollection.find().toArray();
+  }
+
+  async all() {
+    return await keysCollection.find({ chara: this.chara_id }).toArray();
+  }
+
+  async get(channel_id) {
+    return await keysCollection.findOne({
+      chara: this.chara_id,
+      channel_id: channel_id,
+    });
+  }
+
+  async remove(channel_id) {
+    if (await this.get(channel_id))
+      await keysCollection.deleteOne({
+        chara: this.chara_id,
+        channel_id: channel_id,
+      });
+  }
+  async give(channel_id) {
+    if (!(await this.get(channel_id)))
+      await keysCollection.insertOne({
+        chara: this.chara_id,
+        channel_id: channel_id,
+      });
+  }
+}
 
 /**
  * Characters creation, management, etc thanks to the DB, charactersCollection
@@ -42,6 +87,11 @@ const usersCollection = mongoClient.db().collection("users");
 class CharactersAPI {
   constructor(userID) {
     this.userID = userID;
+  }
+
+  static async getCharas() {
+    let a = charactersCollection.find();
+    return a ? a.toArray() : [];
   }
 
   async createCharacter(name, iconURL) {
@@ -388,4 +438,5 @@ module.exports = {
   CharactersAPI,
   AutoProxyAPI,
   GuildAPI,
+  KeyPlaceAPI,
 };

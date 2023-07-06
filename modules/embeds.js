@@ -2,7 +2,6 @@ const { EmbedBuilder, Client } = require("discord.js");
 const { CharactersAPI } = require("./db");
 
 async function CharaEmbed(chara, member, guild) {
-  console.log(guild);
   let db = new CharactersAPI(member.id);
 
   let statsToAppend = "";
@@ -23,10 +22,7 @@ async function CharaEmbed(chara, member, guild) {
     })
     .setTitle(chara.name)
     .setDescription(`${chara.bio || ""}\n\n${statsToAppend}`)
-    .setThumbnail(chara.avatar)
-    .setFooter({
-      text: `Character ID: ${(await db.indexOf(chara._id)) + 1}`,
-    });
+    .setThumbnail(chara.avatar || member.displayAvatarURL());
 
   if (chara.species) {
     emb.addFields({ name: "🐱 Species", value: chara.species });
@@ -63,6 +59,11 @@ const helpEmbed = new EmbedBuilder()
       name: "**Place System**",
       value:
         "Enable/Disable: Customize the place system in your server by using the `/place-system enable` command.\nChannels: Set up specific channels for roleplaying locations using the `/place-system channels [add/delete]` command.\nTravel: Traverse between different places within your roleplaying world with the `/place-system travel` command.\nReset: Reset the place system and clear all location data with the `/place-system reset` command.\nLink/Unlink: Connect or disconnect a roleplaying channel to the place system using the `/place-system link` or `/place-system unlink` command.",
+    },
+    {
+      name: "**Exclusive RP Access**",
+      value:
+        "Give or remove access to a specific rp channel for a specific user/character with `/key give` and `/key remove`",
     },
     {
       name: "**Stats Management**",

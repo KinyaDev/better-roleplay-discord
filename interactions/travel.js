@@ -6,9 +6,10 @@ const {
   StringSelectMenuBuilder,
   ActionRowBuilder,
   ComponentType,
+  GuildChannel,
 } = require("discord.js");
 
-const { GuildAPI, CharactersAPI } = require("../modules/db");
+const { GuildAPI, CharactersAPI, KeyPlaceAPI } = require("../modules/db");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -45,26 +46,27 @@ module.exports = {
           interaction.channel.parentId
         );
 
+        let keydb = new KeyPlaceAPI((await db.getSelected())._id);
+
         let selectmenu = new StringSelectMenuBuilder().setCustomId(
           "place-select"
         );
 
-        for (let a of accessibleChannels) {
-          let ch = await client.channels.fetch(a);
-          selectmenu.addOptions({ value: ch.name, label: ch.name });
+        async function doTheThing(channel_id) {
+          let ch = client.channels.cache.get(channel_id);
+          if (ch instanceof GuildChannel) {
+            selectmenu.addOptions({ value: ch.name, label: ch.name });
+          } else rp.unlink(channel_id);
         }
+        for (let a of accessibleChannels) doTheThing(a);
+        for (let a of accessibleChannels2) doTheThing(a);
 
-        for (let a of accessibleChannels2) {
-          let ch = await client.channels.fetch(a);
-          selectmenu.addOptions({ value: ch.name, label: ch.name });
-        }
+        for (let key of await keydb.all()) doTheThing(key.channel_id);
 
-        if (
-          accessibleChannels.length === 0 &&
-          accessibleChannels2.length === 0
-        ) {
+        if (selectmenu.options.length === 0) {
           interaction.editReply("You can't go anywhere!");
         } else {
+          console.log(selectmenu.options.length);
           let res = await interaction.editReply({
             content: "Choose a place to go",
             components: [new ActionRowBuilder().addComponents(selectmenu)],
@@ -110,14 +112,7 @@ module.exports = {
                 });
               }, 1000);
 
-              let chara = await db.getSelected();
-
-              interaction.channel.send({
-                content: `${
-                  chara ? chara.name : interaction.member.user
-                } travels to ${aim}`,
-                ephemeral: false,
-              });
+              interaction.deleteReply();
 
               db.setLocation(aim.id);
             } else {
