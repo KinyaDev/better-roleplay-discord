@@ -112,8 +112,7 @@ module.exports = {
               }, 1000);
 
               interaction.deleteReply();
-
-              db.setLocation(aim.id);
+              if (await db.getSelected()) db.setLocation(aim.id);
             } else {
               i.reply({
                 content: `The select menu isn't for you!`,

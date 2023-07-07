@@ -11,10 +11,10 @@ module.exports = {
     .setDescription(
       "Personalize character's appearance with the /avatar [avatar] command."
     )
-    .addStringOption((option) =>
+    .addAttachmentOption((option) =>
       option
         .setName("avatar")
-        .setDescription("URL of the avatar to set")
+        .setDescription("The image of the avatar.")
         .setRequired(true)
     ),
   /**
@@ -23,7 +23,7 @@ module.exports = {
    * @param {ChatInputCommandInteraction} interaction
    */
   run: async (client, interaction, db, langdata) => {
-    let url = interaction.options.getString("avatar");
+    let url = interaction.options.getAttachment("avatar").url;
 
     if (db.getSelected()) {
       if (isImageUrl(url)) {

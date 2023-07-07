@@ -12,8 +12,14 @@ module.exports = async (client, message) => {
   let webhookify = webhooks(client);
   if (message.author.bot) return;
 
-  let mention = message.mentions.users.first();
-  if (mention && mention.id === client.user.id) {
+  function parse(str) {
+    return str
+      .replace(/ +/gi, "")
+      .replace(/(\<\#)/gi, "")
+      .replace(/\>/gi, "");
+  }
+  let mention = parse(message.content);
+  if (mention === client.user.id) {
     require("../interactions/help").runMessage(client, message);
   }
 

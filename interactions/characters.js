@@ -32,24 +32,31 @@ module.exports = {
     let chara = (await db.getSelected()) || charas[0] || undefined;
 
     if (chara) {
-      let selectMenu = new StringSelectMenuBuilder()
-        .setCustomId(`charas`)
-        .setPlaceholder("Make a selection!");
+      async function genSelectMenu(selectedChara) {
+        let selectMenu = new StringSelectMenuBuilder()
+          .setCustomId(`charas`)
+          .setPlaceholder("Make a selection!");
 
-      for (let chara of charas) {
-        if (!(await db.getSelected())._id.equals(chara._id)) {
-          selectMenu.addOptions({
-            label: chara.name,
-            value: chara._id.toString(),
-          });
+        for (let chara of charas) {
+          if (!selectedChara._id.equals(chara._id)) {
+            selectMenu.addOptions({
+              label: chara.name,
+              value: chara._id.toString(),
+            });
+          }
         }
+
+        let row = new ActionRowBuilder().setComponents(selectMenu);
+
+        return { row, selectMenu };
       }
 
-      let row = new ActionRowBuilder().setComponents(selectMenu);
+      let newThing = await genSelectMenu(chara);
 
       let res = await interaction.editReply({
         embeds: [await CharaEmbed(chara, member, interaction.guild)],
-        components: selectMenu.options.length !== 0 ? [row] : undefined,
+        components:
+          newThing.selectMenu.options.length !== 0 ? [newThing.row] : undefined,
         fetchReply: true,
       });
 
@@ -63,9 +70,14 @@ module.exports = {
 
         for (let chara of charas) {
           if (chara._id.equals(selection)) {
+            let newThing = await genSelectMenu(chara);
+
             let newi = await interaction.editReply({
               embeds: [await CharaEmbed(chara, member, interaction.guild)],
-              components: selectMenu.options.length !== 0 ? [row] : undefined,
+              components:
+                newThing.selectMenu.options.length !== 0
+                  ? [newThing.row]
+                  : undefined,
             });
 
             if (newi.embeds[0].author.name === interaction.member.user.username)

@@ -16,10 +16,10 @@ module.exports = {
         .setDescription("The name to set to your brand new character")
         .setRequired(true)
     )
-    .addStringOption((option) =>
+    .addAttachmentOption((option) =>
       option
         .setName("avatar")
-        .setDescription("The avatar url to set to your brand new character")
+        .setDescription("The image of the avatar.")
         .setRequired(false)
     )
     .addStringOption((option) =>
@@ -41,7 +41,7 @@ module.exports = {
    */
   run: async (client, interaction, db, langdata) => {
     let name = interaction.options.getString("name");
-    let avatar = interaction.options.getString("avatar");
+    let avatar = interaction.options.getAttachment("avatar").url;
     let bio = interaction.options.getString("bio");
     let species = interaction.options.getString("species");
     if (avatar) {

@@ -143,6 +143,7 @@ module.exports = {
                 let _id = new ObjectId(i.values[0]);
                 if (chara._id.equals(_id)) {
                   await callback(chara);
+                  setTimeout(() => interaction.deleteReply(), 5000);
 
                   break;
                 }
