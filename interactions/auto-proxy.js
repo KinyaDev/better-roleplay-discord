@@ -20,16 +20,20 @@ module.exports = {
     let channels = await autoproxy.channels();
     if (channels.includes(interaction.channelId)) {
       autoproxy.delAutoProxy(interaction.channelId);
-      interaction.editReply({
-        content: langdata.apdisa,
-        ephemeral: true,
-      });
+      interaction
+        .editReply({
+          content: langdata.apdisa,
+          ephemeral: true,
+        })
+        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
     } else {
       autoproxy.addAutoProxy(interaction.channelId);
-      interaction.editReply({
-        content: langdata.apena,
-        ephemeral: true,
-      });
+      interaction
+        .editReply({
+          content: langdata.apena,
+          ephemeral: true,
+        })
+        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
     }
   },
 };

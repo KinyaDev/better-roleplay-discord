@@ -39,6 +39,7 @@ const linkChannelsCollection = db.collection("link_channels");
 const guildsCollection = db.collection("guilds");
 const usersCollection = db.collection("users");
 const keysCollection = db.collection("keys");
+const economyCollection = db.collection("economy");
 
 class KeyPlaceAPI {
   /**
@@ -347,9 +348,54 @@ class GuildAPI {
     return info ? info.lang : "en";
   }
 
-  async linkeds(id) {
-    let linkChannels = await linkChannelsCollection.findOne({ channel: id });
-    return linkChannels ? linkChannels.channels.split(",") : [];
+  async linking(type, id, ids) {
+    if (typeof ids === "string") ids = [ids];
+    if (type === "add") {
+      for (let toAdd of ids) {
+        if (!(await this.getLinking(id, toAdd))) {
+          linkChannelsCollection.insertOne({
+            guild: this.guildID,
+            main_id: id,
+            channel_id: toAdd,
+          });
+        }
+      }
+    } else if (type === "remove") {
+      if (!ids) {
+        linkChannelsCollection.deleteMany({ main_id: id });
+      } else {
+        for (let toRem of ids) {
+          if (await this.getLinking(id, toRem)) {
+            linkChannelsCollection.deleteOne({
+              main_id: id,
+              channel_id: toRem,
+            });
+          }
+        }
+      }
+    } else if (type === "set") {
+      linkChannelsCollection.deleteMany({ main_id: id });
+      for (let toAdd of ids) {
+        if (!(await this.getLinking(id, toAdd))) {
+          linkChannelsCollection.insertOne({
+            guild: this.guildID,
+            main_id: id,
+            channel_id: toAdd,
+          });
+        }
+      }
+    }
+  }
+
+  async getLinking(id, id2) {
+    return await linkChannelsCollection.findOne({
+      main_id: id,
+      channel_id: id2,
+    });
+  }
+
+  async getLinkings(id) {
+    return await linkChannelsCollection.find({ main_id: id }).toArray();
   }
 
   link(id, ids) {
@@ -421,10 +467,17 @@ class GuildAPI {
     return linkedChannels && linkedChannels.channels.includes(id2);
   }
 
-  enable(bool) {
+  disable() {
     guildsCollection.updateOne(
       { guild: this.guildID },
-      { $set: { active: bool ? 1 : 0 } }
+      { $set: { active: 0 } }
+    );
+  }
+
+  enable() {
+    guildsCollection.updateOne(
+      { guild: this.guildID },
+      { $set: { active: 1 } }
     );
   }
 
@@ -434,9 +487,76 @@ class GuildAPI {
   }
 }
 
+class EconomyAPI {
+  constructor(chara_id) {
+    this.chara_id = chara_id;
+  }
+
+  async setBankBalance(balance) {
+    if (balance === 0) {
+      economyCollection.deleteMany({
+        chara_id: this.chara_id,
+        type: "bank",
+      });
+    } else {
+      if (await this.getBankBalance()) {
+        economyCollection.updateOne(
+          { chara_id: this.chara_id, type: "bank" },
+          { $set: { balance } }
+        );
+      } else {
+        economyCollection.insertOne({
+          type: "bank",
+          balance,
+          chara_id: this.chara_id,
+        });
+      }
+    }
+  }
+
+  async setPersonalBalance(balance) {
+    if (balance === 0) {
+      economyCollection.deleteMany({
+        chara_id: this.chara_id,
+        type: "personal",
+      });
+    } else {
+      if (await this.getPersonalBalance()) {
+        economyCollection.updateOne(
+          { chara_id: this.chara_id, type: "personal" },
+          { $set: { balance } }
+        );
+      } else {
+        economyCollection.insertOne({
+          type: "personal",
+          balance,
+          chara_id: this.chara_id,
+        });
+      }
+    }
+  }
+
+  async getBankBalance() {
+    return economyCollection
+      .findOne({ chara_id: this.chara_id, type: "bank" })
+      .then((e) => (e && e.balance ? e.balance : 0));
+  }
+
+  async getPersonalBalance() {
+    return economyCollection
+      .findOne({ chara_id: this.chara_id, type: "personal" })
+      .then((e) => (e && e.balance ? e.balance : 0));
+  }
+
+  static async all(type) {
+    return await economyCollection.find(type ? { type } : undefined).toArray();
+  }
+}
+
 module.exports = {
   CharactersAPI,
   AutoProxyAPI,
   GuildAPI,
   KeyPlaceAPI,
+  EconomyAPI,
 };

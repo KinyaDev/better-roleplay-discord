@@ -28,10 +28,12 @@ module.exports = {
 
     if (chara) {
       if (message.length > 2000) {
-        interaction.editReply({
-          content: `Error. Message must be 2000 or fewer.`,
-          ephemeral: true,
-        });
+        interaction
+          .editReply({
+            content: `Error. Message must be 2000 or fewer.`,
+            ephemeral: true,
+          })
+          .then(() => setTimeout(() => interaction.deleteReply(), 5000));
       } else {
         let stats = await db.getStats();
 
@@ -47,10 +49,12 @@ module.exports = {
         );
       }
     } else {
-      interaction.editReply({
-        content: langdata["no-chara"],
-        ephemeral: true,
-      });
+      interaction
+        .editReply({
+          content: langdata["no-chara"],
+          ephemeral: true,
+        })
+        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
     }
   },
 };

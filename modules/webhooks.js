@@ -1,4 +1,4 @@
-const { Client, Webhook, WebhookClient } = require("discord.js");
+const { Client, Webhook, WebhookClient, TextChannel } = require("discord.js");
 /**
  *
  * @param {Client} bot
@@ -8,7 +8,7 @@ function webhooks(bot) {
     async get(channelId) {
       let channel = await bot.channels.fetch(channelId);
 
-      if (channel.isTextBased()) {
+      if (channel instanceof TextChannel) {
         /**
          * @type {Webhook[]}
          */
@@ -19,14 +19,17 @@ function webhooks(bot) {
     async edit(channelId, messageId, name, avatar, message) {
       const channel = bot.channels.cache.get(channelId);
       try {
-        const webhooks = await channel.fetchWebhooks();
-        let webhook = webhooks.find((wh) => wh.owner.id === bot.user.id);
+        if (channel instanceof TextChannel) {
+          const webhooks = await channel.fetchWebhooks();
+          let webhook = webhooks.find((wh) => wh.owner.id === bot.user.id);
 
-        await webhook.editMessage(messageId, {
-          content: message,
-          username: name,
-          avatarURL: avatar,
-        });
+          await webhook.editMessage(messageId, {
+            content: message,
+            username: name,
+            avatarURL: avatar,
+            allowedMentions: { parse: [] },
+          });
+        }
       } catch (error) {
         console.error("Error trying to send a message: ", error);
       }
@@ -34,18 +37,24 @@ function webhooks(bot) {
     async send(channelId, name, avatar, message) {
       const channel = bot.channels.cache.get(channelId);
       try {
-        const webhooks = await channel.fetchWebhooks();
-        let webhook = webhooks.find((wh) => wh.owner.id === bot.user.id);
+        if (channel instanceof TextChannel) {
+          const webhooks = await channel.fetchWebhooks();
+          let webhook = webhooks.find((wh) => wh.owner.id === bot.user.id);
 
-        if (!webhook) {
-          webhook = await channel.createWebhook({ name: name, avatar: avatar });
+          if (!webhook) {
+            webhook = await channel.createWebhook({
+              name: name,
+              avatar: avatar,
+            });
+          }
+
+          await webhook.send({
+            content: message,
+            username: name,
+            avatarURL: avatar,
+            allowedMentions: { parse: [] },
+          });
         }
-
-        await webhook.send({
-          content: message,
-          username: name,
-          avatarURL: avatar,
-        });
       } catch (error) {
         console.error("Error trying to send a message: ", error);
       }

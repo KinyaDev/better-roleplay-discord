@@ -41,8 +41,8 @@ module.exports = {
       }
 
       if (channels.includes(interaction.channel.parentId)) {
-        let accessibleChannels = await rp.linkeds(interaction.channel.id);
-        let accessibleChannels2 = await rp.linkeds(
+        let accessibleChannels = await rp.getLinkings(interaction.channel.id);
+        let accessibleChannels2 = await rp.getLinkings(
           interaction.channel.parentId
         );
 
@@ -58,15 +58,14 @@ module.exports = {
             selectmenu.addOptions({ value: ch.name, label: ch.name });
           } else rp.unlink(channel_id);
         }
-        for (let a of accessibleChannels) doTheThing(a);
-        for (let a of accessibleChannels2) doTheThing(a);
+        for (let a of accessibleChannels) doTheThing(a.channel_id);
+        for (let a of accessibleChannels2) doTheThing(a.channel_id);
 
         for (let key of await keydb.all()) doTheThing(key.channel_id);
 
         if (selectmenu.options.length === 0) {
           interaction.editReply("You can't go anywhere!");
         } else {
-          console.log(selectmenu.options.length);
           let res = await interaction.editReply({
             content: "Choose a place to go",
             components: [new ActionRowBuilder().addComponents(selectmenu)],
@@ -124,16 +123,20 @@ module.exports = {
           });
         }
       } else {
-        interaction.editReply({
-          content: langdata.nochrp,
-          ephemeral: true,
-        });
+        interaction
+          .editReply({
+            content: langdata.nochrp,
+            ephemeral: true,
+          })
+          .then(() => setTimeout(() => interaction.deleteReply(), 5000));
       }
     } else {
-      interaction.editReply({
-        content: langdata["no-rp"],
-        ephemeral: true,
-      });
+      interaction
+        .editReply({
+          content: langdata["no-rp"],
+          ephemeral: true,
+        })
+        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
     }
   },
 };

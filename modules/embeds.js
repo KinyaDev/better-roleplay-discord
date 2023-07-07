@@ -1,8 +1,9 @@
 const { EmbedBuilder, Client } = require("discord.js");
-const { CharactersAPI } = require("./db");
+const { CharactersAPI, EconomyAPI } = require("./db");
 
 async function CharaEmbed(chara, member, guild) {
   let db = new CharactersAPI(member.id);
+  let economy = new EconomyAPI(chara._id);
 
   let statsToAppend = "";
 
@@ -25,13 +26,28 @@ async function CharaEmbed(chara, member, guild) {
     .setThumbnail(chara.avatar || member.displayAvatarURL());
 
   if (chara.species) {
-    emb.addFields({ name: "🐱 Species", value: chara.species });
-  } else emb.addFields({ name: "🐱 Species", value: "Human" });
+    emb.addFields({ name: "🐱 Species", value: chara.species, inline: true });
+  } else emb.addFields({ name: "🐱 Species", value: "Human", inline: true });
 
   if (chara.location) {
     let ch = await guild.channels.fetch(chara.location);
-    emb.addFields({ name: "🗺️ Location", value: ch.name });
-  } else emb.addFields({ name: "🗺️ Location", value: "Nowhere" });
+    emb.addFields({ name: "🗺️ Location", value: ch.name, inline: true });
+  } else emb.addFields({ name: "🗺️ Location", value: "Nowhere", inline: true });
+
+  if (await economy.getPersonalBalance()) {
+    emb.addFields({
+      name: "💰 Personal Balance",
+      value: (await economy.getPersonalBalance()).toString(),
+    });
+  }
+
+  if (await economy.getBankBalance()) {
+    emb.addFields({
+      name: "💰 Bank Balance",
+      value: (await economy.getBankBalance()).toString(),
+      inline: true,
+    });
+  }
 
   return emb.toJSON();
 }

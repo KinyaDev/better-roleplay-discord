@@ -25,15 +25,19 @@ module.exports = {
     if (db.getSelected()) {
       db.setSpecies(species);
 
-      interaction.editReply({
-        content: langdata.species,
-        ephemeral: true,
-      });
+      interaction
+        .editReply({
+          content: langdata.species.replace("$", species),
+          ephemeral: true,
+        })
+        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
     } else {
-      interaction.editReply({
-        content: langdata["no-chara"],
-        ephemeral: true,
-      });
+      interaction
+        .editReply({
+          content: langdata["no-chara"],
+          ephemeral: true,
+        })
+        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
     }
   },
 };

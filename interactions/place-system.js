@@ -23,7 +23,7 @@ module.exports = {
     )
     .addSubcommand((sc) =>
       sc
-        .setName("channels")
+        .setName("channel_ids")
         .setDescription(
           " Set roleplaying location channels with the /place-system channels [add/delete] command."
         )
@@ -39,7 +39,7 @@ module.exports = {
         )
         .addStringOption((opt) =>
           opt
-            .setName("channels")
+            .setName("channel_ids")
             .setDescription(
               "Category IDs to be marked as roleplay places, seperated by comma."
             )
@@ -55,33 +55,35 @@ module.exports = {
     )
     .addSubcommand((sc) =>
       sc
-        .setName("link")
+        .setName("linking")
         .setDescription(
-          "Connect roleplaying channels with the /place-system link command."
+          "Connect roleplaying channels each others with the /place-system linking command."
         )
         .addStringOption((opt) =>
           opt
-            .setName("id")
-            .setDescription("Category ID to link to others")
-            .setRequired(true)
-        )
-        .addStringOption((opt) =>
-          opt
-            .setName("ids")
-            .setDescription(
-              "Category IDs seperated by comma to link with the later."
+            .setName("type")
+            .setDescription("Type set/add/remove")
+            .setChoices(
+              { name: "set", value: "set" },
+              { name: "add", value: "add" },
+              { name: "remove", value: "remove" }
             )
             .setRequired(true)
         )
-    )
-    .addSubcommand((sc) =>
-      sc
-        .setName("unlink")
-        .setDescription(
-          "Disconnect roleplaying channels with the /place-system unlink command."
+        .addStringOption((opt) =>
+          opt
+            .setName("main_id")
+            .setDescription(
+              "When you are in a channel with that id, you can travel to what you set in the third parameter"
+            )
+            .setRequired(true)
         )
         .addStringOption((opt) =>
-          opt.setName("id").setDescription("Category ID").setRequired(true)
+          opt
+            .setName("channel_ids")
+            .setDescription(
+              "Where you can travel to. Channel IDs seperated by comma."
+            )
         )
     ),
   /**
@@ -93,81 +95,78 @@ module.exports = {
     if (interaction.isChatInputCommand()) {
       let rp = new GuildAPI(interaction.guildId);
       let enabled = await rp.isEnabled();
-      let db = new CharactersAPI(interaction.member.id);
+      function parse(str) {
+        return str
+          .replace(/ +/gi, "")
+          .replace(/(\<\#)/gi, "")
+          .replace(/\>/gi, "");
+      }
+      let channel_ids = parse(interaction.options.getString("channel_ids"));
 
-      if (interaction.options.getSubcommand() === "link") {
-        if (interaction.memberPermissions.has("Administrator")) {
-          if (enabled) {
-            let id1 = interaction.options.getString("id");
-            let ids1 = interaction.options.getString("ids");
+      let type = interaction.options.getString("type");
 
-            if (ids1) {
-              interaction.editReply({
-                content: langdata.link.replace("$", `<#${id1}>`).replace(
-                  "$1",
-                  ids1
-                    .split(",")
-                    .map((m) => `<#${m}>`)
-                    .join(", ")
-                ),
-                ephemeral: true,
-              });
-            } else {
-              interaction.editReply({
-                content: langdata.unlink.replace("$", "<#" + id1 + ">!"),
-                ephemeral: true,
-              });
-            }
-
-            rp.link(id1, ids1);
-          } else {
-            interaction.editReply({
-              content: langdata["no-rp"],
-              ephemeral: true,
-            });
-          }
-        } else {
-          interaction.editReply({
-            content: langdata["no-perm"],
-            ephemeral: true,
-          });
+      if (interaction.options.getSubcommand() === "linking") {
+        let main_id = parse(interaction.options.getString("main_id"));
+        function noChannelIds() {
+          interaction.editReply(
+            "Sorry, please provide the ids of the channels to link to the main channel id"
+          );
         }
-      } else if (interaction.options.getSubcommand() === "unlink") {
-        if (interaction.memberPermissions.has("Administrator")) {
-          if (enabled) {
-            let id = interaction.options.getString("id");
 
-            interaction.editReply({
-              content: "Unlinked <#" + id + ">",
-              ephemeral: true,
-            });
-
-            rp.unlink(id);
+        function success(verb) {
+          if (channel_ids) {
+            let chs = channel_ids.split(",");
+            interaction.editReply(
+              `:white_check_mark: Success! The channels ${chs.map(
+                (ch) => `<#${ch}>`
+              )}  have been ${verb} with the <#${main_id}> channel`
+            );
           } else {
-            interaction.editReply({
-              content: langdata["no-rp"],
-              ephemeral: true,
-            });
+            interaction.editReply(
+              `:white_check_mark: Success! Everything linked to <#${main_id}> has been deleted`
+            );
           }
-        } else {
-          interaction.editReply({
-            content: langdata["no-perm"],
-            ephemeral: true,
-          });
+        }
+
+        if (type === "add") {
+          if (channel_ids) {
+            rp.linking(type, main_id, channel_ids.split(","));
+            success("added");
+          } else noChannelIds();
+        }
+
+        if (type === "set") {
+          if (channel_ids) {
+            rp.linking(type, main_id, channel_ids.split(","));
+            success("set");
+          } else noChannelIds();
+        }
+
+        if (type === "remove") {
+          rp.linking(
+            type,
+            main_id,
+            channel_ids ? channel_ids.split(",") : undefined
+          );
+          success("removed");
         }
       } else if (interaction.options.getSubcommand() === "reset") {
         if (interaction.memberPermissions.has("Administrator")) {
           rp.reset();
 
-          interaction.editReply({
-            content: "The place system has reset!",
-            ephemeral: true,
-          });
+          interaction
+            .editReply({
+              content: "The place system has reset!",
+              ephemeral: true,
+            })
+            .then(() => setTimeout(() => interaction.deleteReply(), 5000));
         } else {
-          interaction.editReply({
-            content: langdata["no-perm"],
-            ephemeral: true,
-          });
+          interaction
+            .editReply({
+              content: langdata["no-perm"],
+              ephemeral: true,
+            })
+            .then(() => setTimeout(() => interaction.deleteReply(), 5000));
         }
       } else if (interaction.options.getSubcommand() === "channels") {
         if (enabled) {
@@ -177,12 +176,14 @@ module.exports = {
 
             if (type === "add") {
               let toAdd = await rp.addChannels(ids);
-              interaction.editReply({
-                content: `Roleplay categories added! ${toAdd.map(
-                  (id) => `<#${id}>`
-                )}`,
-                ephemeral: true,
-              });
+              interaction
+                .editReply({
+                  content: `Roleplay categories added! ${toAdd.map(
+                    (id) => `<#${id}>`
+                  )}`,
+                  ephemeral: true,
+                })
+                .then(() => setTimeout(() => interaction.deleteReply(), 5000));
             } else {
               let toDel = await rp.deleteChannels(ids);
               interaction.editReply({
@@ -193,10 +194,12 @@ module.exports = {
               });
             }
           } else {
-            interaction.editReply({
-              content: langdata["no-perm"],
-              ephemeral: true,
-            });
+            interaction
+              .editReply({
+                content: langdata["no-perm"],
+                ephemeral: true,
+              })
+              .then(() => setTimeout(() => interaction.deleteReply(), 5000));
           }
         }
       } else {
@@ -208,10 +211,12 @@ module.exports = {
             ephemeral: true,
           });
         } else {
-          interaction.editReply({
-            content: langdata["no-perm"],
-            ephemeral: true,
-          });
+          interaction
+            .editReply({
+              content: langdata["no-perm"],
+              ephemeral: true,
+            })
+            .then(() => setTimeout(() => interaction.deleteReply(), 5000));
         }
       }
     }

@@ -21,6 +21,7 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMessageReactions,
   ],
+  allowedMentions: { parse: [] },
 });
 
 client.once(Events.ClientReady, async (c) => {
@@ -33,8 +34,6 @@ client.once(Events.ClientReady, async (c) => {
     name: args ? args.join(" ") : "Ping me for help or use /help",
   });
 });
-
-const webhookify = require("./modules/webhooks")(client);
 
 // Construct and prepare an instance of the REST module
 const rest = new REST().setToken(process.env.TOKEN);

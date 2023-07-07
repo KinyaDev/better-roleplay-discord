@@ -76,10 +76,12 @@ module.exports = {
         }
       });
     } else {
-      interaction.editReply({
-        content: langdata["no-chara"],
-        ephemeral: true,
-      });
+      interaction
+        .editReply({
+          content: langdata["no-chara"],
+          ephemeral: true,
+        })
+        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
     }
   },
 };

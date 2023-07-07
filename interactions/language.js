@@ -25,18 +25,20 @@ module.exports = {
    * @param {Client} client
    * @param {ChatInputCommandInteraction} interaction
    */
-  run: async (client, interaction, db) => {
+  run: async (client, interaction, db, langdata) => {
     let rp = new GuildAPI(interaction.guildId);
 
     let lang = interaction.options.getString("lang");
     if (langs.includes(lang)) {
       rp.setLang(lang);
 
-      interaction.editReply((await rp.getLangData()).lang.replace("$", lang));
+      interaction
+        .editReply(langdata.lang.replace("$", lang))
+        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
     } else {
-      interaction.editReply(
-        (await rp.getLangData())["no-lang"].replace("$", langs.join(", "))
-      );
+      interaction
+        .editReply(langdata["no-lang"].replace("$", langs.join(", ")))
+        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
     }
   },
 };

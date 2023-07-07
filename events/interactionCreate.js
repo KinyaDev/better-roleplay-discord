@@ -1,6 +1,12 @@
 const { CharactersAPI, GuildAPI } = require("../modules/db");
 const ask = require("../components/ask");
 const showChara = require("../components/showCharacter");
+const { Client } = require("discord.js");
+/**
+ *
+ * @param {Client} client
+ * @param {import("discord.js").Interaction} interaction
+ */
 module.exports = async (client, interaction) => {
   // Setup APIs
   let db = new CharactersAPI(interaction.member.id);
@@ -11,7 +17,7 @@ module.exports = async (client, interaction) => {
   if (interaction.isCommand()) {
     // Get all the commands in client.commands and run the used interaction.
     try {
-      await interaction.deferReply({ fetchReply: true, ephemeral: true });
+      await interaction.deferReply({ fetchReply: true });
       await client.commands
         .get(interaction.commandName)
         .run(client, interaction, db, langdata);
