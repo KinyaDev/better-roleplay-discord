@@ -6,7 +6,6 @@ const {
   Client,
   ButtonStyle,
 } = require("discord.js");
-const { helpEmbed, placeSystemEmbed } = require("../modules/embeds");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -20,6 +19,8 @@ module.exports = {
    * @param {ChatInputCommandInteraction} interaction
    */
   run: async (client, interaction) => {
+    const { helpEmbed, placeSystemEmbed } = require("../modules/embeds");
+
     let btn = new ButtonBuilder()
       .setCustomId("ask")
       .setLabel("Ask")
@@ -41,6 +42,8 @@ module.exports = {
     });
   },
   runMessage: async (client, message) => {
+    const { helpEmbed, placeSystemEmbed } = require("../modules/embeds");
+
     let btn = new ButtonBuilder()
       .setCustomId("ask")
       .setLabel("Ask")

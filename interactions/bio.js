@@ -19,25 +19,15 @@ module.exports = {
    * @param {Client} client
    * @param {ChatInputCommandInteraction} interaction
    */
-  run: async (client, interaction, db, langdata) => {
+  run: async (client, interaction) => {
+    const { noChara, set } = require("../modules/errors");
+    const { CharactersAPI } = require("../modules/db");
+
+    let db = new CharactersAPI(interaction.user.id);
     let bio = interaction.options.getString("bio");
 
-    if (db.getSelected()) {
-      db.setBio(bio);
-
-      interaction
-        .editReply({
-          content: langdata.bio,
-          ephemeral: true,
-        })
-        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
-    } else {
-      interaction
-        .editReply({
-          content: langdata["no-chara"],
-          ephemeral: true,
-        })
-        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
-    }
+    if (await db.getSelected())
+      db.setBio(bio).then(() => set(interaction, "bio"));
+    else noChara(interaction);
   },
 };

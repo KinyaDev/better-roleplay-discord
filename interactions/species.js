@@ -19,25 +19,31 @@ module.exports = {
    * @param {Client} client
    * @param {ChatInputCommandInteraction} interaction
    */
-  run: async (client, interaction, db, langdata) => {
+  run: async (client, interaction) => {
+    const { set } = require("../modules/errors");
     let species = interaction.options.getString("species");
 
-    if (db.getSelected()) {
-      db.setSpecies(species);
+    const charaSelectMenu = require("../modules/charaSelectMenu");
 
-      interaction
-        .editReply({
-          content: langdata.species.replace("$", species),
-          ephemeral: true,
-        })
-        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
-    } else {
-      interaction
-        .editReply({
-          content: langdata["no-chara"],
-          ephemeral: true,
-        })
-        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
-    }
+    let selectmenu = await charaSelectMenu(
+      interaction.user,
+      interaction,
+      "all"
+    );
+
+    let msg = await interaction.editReply({
+      content: `Select a character to set the species`,
+      components: [selectmenu.row],
+    });
+
+    selectmenu(
+      () => msg,
+      async (chara, charas, db) => {
+        let currentChara = await db.getSelected();
+        db.select(chara._id);
+        db.setSpecies(species).then(() => set(interaction, "bio"));
+        db.select(currentChara._id);
+      }
+    );
   },
 };

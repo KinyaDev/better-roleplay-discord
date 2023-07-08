@@ -7,8 +7,6 @@ const {
   ActionRowBuilder,
   ComponentType,
 } = require("discord.js");
-const { KeyPlaceAPI, CharactersAPI } = require("../modules/db");
-const { ObjectId } = require("mongodb");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -57,66 +55,40 @@ module.exports = {
    * @param {ChatInputCommandInteraction} interaction
    */
   run: async (client, interaction, d, langdata) => {
+    const { KeyPlaceAPI, CharactersAPI } = require("../modules/db");
+    const { ObjectId } = require("mongodb");
+    const { noChara } = require("../modules/errors");
+    const charaSelectMenu = require("../modules/charaSelectMenu");
+
     async function remove() {
       let user = interaction.options.getUser("user");
-      let db = new CharactersAPI(user.id);
-      let charas = await db.getCharas();
       let channel = interaction.options.getChannel("channel");
 
-      let selectmenu = new StringSelectMenuBuilder().setCustomId(
-        "keyloose-select"
-      );
+      let selectmenu = await charaSelectMenu(user, interaction);
 
-      for (let chara of charas) {
-        selectmenu.addOptions({
-          label: chara.name,
-          value: chara._id.toString(),
+      if (selectmenu.hasChara) {
+        let message = await interaction.editReply({
+          content: `Choose the character of the user. Their character will loose access to ${channel}`,
+          components: [],
         });
-      }
 
-      if (selectmenu.options.length !== 0) {
-        if (channel instanceof BaseGuildTextChannel) {
-          let message = await interaction.editReply({
-            content: `Choose the character of the user. Their character will loose access to ${channel}`,
-            components: [new ActionRowBuilder().addComponents(selectmenu)],
-          });
+        selectmenu(
+          () => message,
+          async (chara, charas, db) => {
+            let keydb = new KeyPlaceAPI(chara._id);
+            await keydb.remove(channel.id);
 
-          const collector = message.createMessageComponentCollector({
-            componentType: ComponentType.StringSelect,
-            max: 1,
-          });
+            interaction.editReply({
+              content: `${chara.name} (${user}) lose access ${channel}.`,
+              components: [],
+            });
 
-          collector.on("collect", async (i) => {
-            if (i.user.id === interaction.user.id) {
-              for (let chara of await db.getCharas()) {
-                let _id = new ObjectId(i.values[0]);
-                if (chara._id.equals(_id)) {
-                  let keydb = new KeyPlaceAPI(chara._id);
-                  await keydb.remove(channel.id);
-
-                  interaction.editReply({
-                    content: `${chara.name} (${user}) lose access ${channel}.`,
-                    components: [],
-                  });
-
-                  channel.send({
-                    content: `${chara.name} (${user}) lose access to ${channel}.`,
-                  });
-
-                  console.log(await KeyPlaceAPI.all());
-
-                  break;
-                }
-              }
-            }
-          });
-        }
-      } else {
-        interaction.editReply({
-          content: langdata["no-chara"],
-          ephemeral: true,
-        });
-      }
+            channel.send({
+              content: `${chara.name} (${user}) lose access to ${channel}.`,
+            });
+          }
+        );
+      } else noChara(interaction);
     }
 
     async function give() {

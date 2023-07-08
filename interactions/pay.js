@@ -3,12 +3,9 @@ const {
   ChatInputCommandInteraction,
   Client,
   StringSelectMenuBuilder,
-  BaseGuildTextChannel,
   ActionRowBuilder,
   ComponentType,
 } = require("discord.js");
-const { KeyPlaceAPI, CharactersAPI, EconomyAPI } = require("../modules/db");
-const { ObjectId } = require("mongodb");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -32,7 +29,11 @@ module.exports = {
    * @param {Client} client
    * @param {ChatInputCommandInteraction} interaction
    */
-  run: async (client, interaction, d, langdata) => {
+  run: async (client, interaction) => {
+    const { CharactersAPI, EconomyAPI } = require("../modules/db");
+    const { ObjectId } = require("mongodb");
+    const { noChara } = require("../modules/errors");
+
     let user = interaction.options.getUser("user");
     let db = new CharactersAPI(user.id);
     let charas = await db.getCharas();
@@ -84,12 +85,7 @@ module.exports = {
             }
           }
         });
-      } else {
-        interaction.editReply({
-          content: langdata["no-chara"],
-          ephemeral: true,
-        });
-      }
+      } else noChara(interaction);
     } else {
       interaction.followUp(
         `Your character, ${

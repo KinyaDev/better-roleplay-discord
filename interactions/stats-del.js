@@ -19,22 +19,36 @@ module.exports = {
    * @param {Client} client
    * @param {ChatInputCommandInteraction} interaction
    */
-  run: async (client, interaction, db, langdata) => {
+  run: async (client, interaction) => {
     let name = interaction.options.getString("name");
 
-    let chara = await db.getSelected();
-    if (await db.setStats(name, 0)) {
-      interaction.editReply({
-        content: langdata.statdel.replace("$1", name).replace("$2", chara.name),
-        ephemeral: true,
-      });
-    } else {
-      interaction
-        .editReply({
-          content: langdata["no-chara"],
-          ephemeral: true,
-        })
-        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
-    }
+    const charaSelectMenu = require("../modules/charaSelectMenu");
+
+    let selectmenu = await charaSelectMenu(
+      interaction.user,
+      interaction,
+      "all"
+    );
+
+    let msg = await interaction.editReply({
+      content: `Select a character to del a stat`,
+      components: [selectmenu.row],
+    });
+
+    selectmenu(
+      () => msg,
+      async (chara, charas, db) => {
+        let currentChara = await db.getSelected();
+
+        db.select(chara._id);
+        if (await db.setStats(name, 0)) {
+          interaction.editReply({
+            content: `Stat ${name} has been deleted for ${chara.name}`,
+            components: [],
+          });
+        }
+        db.select(currentChara._id);
+      }
+    );
   },
 };

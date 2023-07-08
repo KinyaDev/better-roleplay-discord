@@ -1,26 +1,13 @@
 const {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
-  CategoryChannel,
   Client,
-  StringSelectMenuBuilder,
-  ActionRowBuilder,
-  ComponentType,
 } = require("discord.js");
-
-const { guild, GuildAPI, CharactersAPI } = require("../modules/db");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("place-system")
     .setDescription("Place system of the bot")
-    .addSubcommand((sc) =>
-      sc
-        .setName("enable")
-        .setDescription(
-          "Customize place system with the /place-system enable/disable command."
-        )
-    )
     .addSubcommand((sc) =>
       sc
         .setName("channel_ids")
@@ -91,21 +78,21 @@ module.exports = {
    * @param {Client} client
    * @param {ChatInputCommandInteraction} interaction
    */
-  run: async (client, interaction, db, langdata) => {
-    if (interaction.isChatInputCommand()) {
-      let rp = new GuildAPI(interaction.guildId);
-      let enabled = await rp.isEnabled();
-      function parse(str) {
-        return str
-          .replace(/ +/gi, "")
-          .replace(/(\<\#)/gi, "")
-          .replace(/\>/gi, "");
-      }
-      let channel_ids = parse(interaction.options.getString("channel_ids"));
+  run: async (client, interaction) => {
+    const { GuildAPI } = require("../modules/db");
+    const { noPerm } = require("../modules/errors");
+    let rp = new GuildAPI(interaction.guildId);
+    function parse(str) {
+      return str
+        .replace(/ +/gi, "")
+        .replace(/(\<\#)/gi, "")
+        .replace(/\>/gi, "");
+    }
+    let channel_ids = parse(interaction.options.getString("channel_ids"));
+    let type = interaction.options.getString("type");
 
-      let type = interaction.options.getString("type");
-
-      if (interaction.options.getSubcommand() === "linking") {
+    if (interaction.options.getSubcommand() === "linking") {
+      if (interaction.memberPermissions.has("Administrator")) {
         let main_id = parse(interaction.options.getString("main_id"));
         function noChannelIds() {
           interaction.editReply(
@@ -150,75 +137,43 @@ module.exports = {
           );
           success("removed");
         }
-      } else if (interaction.options.getSubcommand() === "reset") {
-        if (interaction.memberPermissions.has("Administrator")) {
-          rp.reset();
+      } else noPerm(interaction);
+    } else if (interaction.options.getSubcommand() === "reset") {
+      if (interaction.memberPermissions.has("Administrator")) {
+        rp.reset();
 
+        interaction
+          .editReply({
+            content: "The place system has reset!",
+            ephemeral: true,
+          })
+          .then(() => setTimeout(() => interaction.deleteReply(), 5000));
+      } else noPerm(interaction);
+    } else if (interaction.options.getSubcommand() === "channels") {
+      if (interaction.memberPermissions.has("Administrator")) {
+        let ids = interaction.options.getString("channels");
+        let type = interaction.options.getString("type");
+
+        if (type === "add") {
+          let toAdd = await rp.addChannels(ids);
           interaction
             .editReply({
-              content: "The place system has reset!",
+              content: `Roleplay categories added! ${toAdd.map(
+                (id) => `<#${id}>`
+              )}`,
               ephemeral: true,
             })
             .then(() => setTimeout(() => interaction.deleteReply(), 5000));
         } else {
-          interaction
-            .editReply({
-              content: langdata["no-perm"],
-              ephemeral: true,
-            })
-            .then(() => setTimeout(() => interaction.deleteReply(), 5000));
-        }
-      } else if (interaction.options.getSubcommand() === "channels") {
-        if (enabled) {
-          if (interaction.memberPermissions.has("Administrator")) {
-            let ids = interaction.options.getString("channels");
-            let type = interaction.options.getString("type");
-
-            if (type === "add") {
-              let toAdd = await rp.addChannels(ids);
-              interaction
-                .editReply({
-                  content: `Roleplay categories added! ${toAdd.map(
-                    (id) => `<#${id}>`
-                  )}`,
-                  ephemeral: true,
-                })
-                .then(() => setTimeout(() => interaction.deleteReply(), 5000));
-            } else {
-              let toDel = await rp.deleteChannels(ids);
-              interaction.editReply({
-                content: `Roleplay categories removed! ${toDel.map(
-                  (id) => `<#${id}>`
-                )}`,
-                ephemeral: true,
-              });
-            }
-          } else {
-            interaction
-              .editReply({
-                content: langdata["no-perm"],
-                ephemeral: true,
-              })
-              .then(() => setTimeout(() => interaction.deleteReply(), 5000));
-          }
-        }
-      } else {
-        if (interaction.memberPermissions.has("Administrator")) {
-          rp.enable(!enabled);
-
+          let toDel = await rp.deleteChannels(ids);
           interaction.editReply({
-            content: !enabled ? langdata.rpena : langdata.rpdisa,
+            content: `Roleplay categories removed! ${toDel.map(
+              (id) => `<#${id}>`
+            )}`,
             ephemeral: true,
           });
-        } else {
-          interaction
-            .editReply({
-              content: langdata["no-perm"],
-              ephemeral: true,
-            })
-            .then(() => setTimeout(() => interaction.deleteReply(), 5000));
         }
-      }
+      } else noPerm(interaction);
     }
   },
 };

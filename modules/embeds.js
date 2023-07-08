@@ -87,16 +87,14 @@ const helpEmbed = new EmbedBuilder()
         "Set Stats: Define custom stats for your characters using the `/stats-set` command. Set various attributes and abilities to enhance their roleplaying capabilities.\nDelete Stats: Remove unwanted or outdated stats from your character's profile with the `/stats-del` command.",
     },
     {
-      name: "**Language Support**",
-      value:
-        "This bot provides multilingual support. Use the `/language [lang]` command to select your preferred language. It is available in English (100%), French (90%), and German (90%).",
-    },
-    {
       name: "**Help & Support**",
       value:
-        "For more information, guidance, and frequently asked questions, use the `/help` command. Our helpful and friendly support team is ready to assist you in making the most of our bot.",
+        "For more information, guidance, and frequently asked questions, use the `/help` command. Our helpful and friendly support team is ready to assist you in making the most of our bot. Or join our server with /support command",
     },
-  ]);
+  ])
+  .setFooter({
+    text: "We need your help to integrate ChatGPT (making automated NPCs)! Fund me, join the discord server with /support!",
+  });
 
 const placeSystemEmbed = new EmbedBuilder()
   .setColor("#0099ff")
@@ -130,7 +128,10 @@ const placeSystemEmbed = new EmbedBuilder()
       value:
         "Connect or disconnect a roleplaying channel to the place system.\nUsage: `/place-system link` or `/place-system unlink`.",
     },
-  ]);
+  ])
+  .setFooter({
+    text: "We need your help to integrate ChatGPT (making automated NPCs)! Fund me, join the discord server with /support!",
+  });
 
 module.exports = {
   placeSystemEmbed,

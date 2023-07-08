@@ -3,12 +3,9 @@ const {
   ChatInputCommandInteraction,
   Client,
   StringSelectMenuBuilder,
-  BaseGuildTextChannel,
   ActionRowBuilder,
   ComponentType,
 } = require("discord.js");
-const { KeyPlaceAPI, CharactersAPI, EconomyAPI } = require("../modules/db");
-const { ObjectId } = require("mongodb");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -106,56 +103,31 @@ module.exports = {
    * @param {Client} client
    * @param {ChatInputCommandInteraction} interaction
    */
-  run: async (client, interaction, d, langdata) => {
+  run: async (client, interaction) => {
+    const { EconomyAPI } = require("../modules/db");
+    const { noChara } = require("../modules/errors");
+
     let user = interaction.options.getMember("user") || interaction.member;
-    let db = new CharactersAPI(user.id);
-    let charas = await db.getCharas();
     let type = interaction.options.getString("type");
     let balance = interaction.options.getNumber("balance");
+    const charaSelectMenu = require("../modules/charaSelectMenu");
 
     if (interaction.memberPermissions.has("Administrator")) {
       async function doTheThing(type2, callback) {
-        let selectmenu = new StringSelectMenuBuilder().setCustomId(
-          "economyset"
+        let selectmenu = await charaSelectMenu(user, interaction, "all");
+
+        let message = await interaction.editReply({
+          content: `Their ${type} balance will be ${type2} to ${balance} after selecting the character of the user.`,
+          components: [new ActionRowBuilder().addComponents(selectmenu)],
+        });
+
+        selectmenu(
+          () => message,
+          async (chara, charas, db) => {
+            await callback(chara);
+            setTimeout(() => interaction.deleteReply(), 5000);
+          }
         );
-
-        for (let chara of charas) {
-          selectmenu.addOptions({
-            label: chara.name,
-            value: chara._id.toString(),
-          });
-        }
-
-        if (selectmenu.options.length !== 0) {
-          let message = await interaction.editReply({
-            content: `Their ${type} balance will be ${type2} to ${balance} after selecting the character of the user.`,
-            components: [new ActionRowBuilder().addComponents(selectmenu)],
-          });
-
-          const collector = message.createMessageComponentCollector({
-            componentType: ComponentType.StringSelect,
-            max: 1,
-          });
-
-          collector.on("collect", async (i) => {
-            if (i.user.id === interaction.user.id) {
-              for (let chara of await db.getCharas()) {
-                let _id = new ObjectId(i.values[0]);
-                if (chara._id.equals(_id)) {
-                  await callback(chara);
-                  setTimeout(() => interaction.deleteReply(), 5000);
-
-                  break;
-                }
-              }
-            }
-          });
-        } else {
-          interaction.editReply({
-            content: langdata["no-chara"],
-            ephemeral: true,
-          });
-        }
       }
 
       if (interaction.options.getSubcommand() === "set-balance") {

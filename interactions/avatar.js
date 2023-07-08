@@ -22,28 +22,17 @@ module.exports = {
    * @param {Client} client
    * @param {ChatInputCommandInteraction} interaction
    */
-  run: async (client, interaction, db, langdata) => {
+  run: async (client, interaction) => {
+    const { noChara, set, invalidImg } = require("../modules/errors");
+    const { CharactersAPI } = require("../modules/db");
+
+    let db = new CharactersAPI(interaction.user.id);
     let url = interaction.options.getAttachment("avatar").url;
 
     if (db.getSelected()) {
-      if (isImageUrl(url)) {
-        db.setAvatar(url);
-
-        interaction.editReply({
-          content: langdata.avatar,
-          files: [url],
-        });
-      } else
-        interaction
-          .editReply("Invalid image url")
-          .then(() => setTimeout(() => interaction.deleteReply(), 5000));
-    } else {
-      interaction
-        .editReply({
-          content: langdata["no-chara"],
-          ephemeral: true,
-        })
-        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
-    }
+      if (isImageUrl(url))
+        db.setAvatar(url).then(() => set(interaction, "avatar"));
+      else invalidImg(interaction);
+    } else noChara(interaction);
   },
 };

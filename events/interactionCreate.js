@@ -1,18 +1,21 @@
-const { CharactersAPI, GuildAPI } = require("../modules/db");
-const ask = require("../components/ask");
-const showChara = require("../components/showCharacter");
-const { Client } = require("discord.js");
 /**
  *
  * @param {Client} client
  * @param {import("discord.js").Interaction} interaction
  */
 module.exports = async (client, interaction) => {
+  const { CharactersAPI, GuildAPI } = require("../modules/db");
+  const ask = require("../components/ask");
+  const showChara = require("../components/showCharacter");
+  const { Client } = require("discord.js");
+
   // Setup APIs
   let db = new CharactersAPI(interaction.member.id);
-  let g = new GuildAPI(interaction.guildId);
-  let langdata = await g.getLangData();
-  g.init();
+  new GuildAPI(interaction.guild.id).init();
+
+  if (!(await db.getSelected()) && (await db.getCharas()).length > 0) {
+    db.select((await db.getCharas())[0]._id);
+  }
 
   if (interaction.isCommand()) {
     // Get all the commands in client.commands and run the used interaction.
@@ -20,7 +23,7 @@ module.exports = async (client, interaction) => {
       await interaction.deferReply({ fetchReply: true });
       await client.commands
         .get(interaction.commandName)
-        .run(client, interaction, db, langdata);
+        .run(client, interaction);
     } catch (e) {
       console.error(e);
     }

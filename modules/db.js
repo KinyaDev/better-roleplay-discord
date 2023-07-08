@@ -330,24 +330,6 @@ class GuildAPI {
     }
   }
 
-  setLang(lang) {
-    guildsCollection.updateOne(
-      { guild: this.guildID },
-      { $set: { lang: lang } }
-    );
-  }
-
-  async getLangData() {
-    let lang = await this.getLang();
-    let langData = require("../langs.json");
-    return langData[lang];
-  }
-
-  async getLang() {
-    let info = await this.getInfo();
-    return info ? info.lang : "en";
-  }
-
   async linking(type, id, ids) {
     if (typeof ids === "string") ids = [ids];
     if (type === "add") {
@@ -452,7 +434,6 @@ class GuildAPI {
     let info = await this.getInfo();
     if (!info) {
       await guildsCollection.insertOne({
-        lang: "en",
         guild: this.guildID,
         active: 0,
         channels: "",

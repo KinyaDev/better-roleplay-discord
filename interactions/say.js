@@ -3,7 +3,6 @@ const {
   ChatInputCommandInteraction,
   Client,
 } = require("discord.js");
-const webhooks = require("../modules/webhooks");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -20,9 +19,14 @@ module.exports = {
    * @param {Client} client
    * @param {ChatInputCommandInteraction} interaction
    */
-  run: async (client, interaction, db, langdata) => {
+  run: async (client, interaction) => {
+    const webhooks = require("../modules/webhooks");
+    const { CharactersAPI } = require("../modules/db");
+    const { noChara } = require("../modules/errors");
+
     const webhookify = webhooks(client);
 
+    let db = new CharactersAPI(interaction.user.id);
     let chara = await db.getSelected();
     let message = interaction.options.getString("message");
 
@@ -38,7 +42,7 @@ module.exports = {
         let stats = await db.getStats();
 
         stats.forEach((s, i) => {
-          message = message.replace(`$${i}`, `${s.name}: ${s.value}`);
+          message = message.replace(`$${i + 1}`, `${s.name}: ${s.value}`);
         });
 
         await webhookify.send(
@@ -48,13 +52,6 @@ module.exports = {
           message
         );
       }
-    } else {
-      interaction
-        .editReply({
-          content: langdata["no-chara"],
-          ephemeral: true,
-        })
-        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
-    }
+    } else noChara(interaction);
   },
 };

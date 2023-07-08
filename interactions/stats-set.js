@@ -25,27 +25,37 @@ module.exports = {
    * @param {Client} client
    * @param {ChatInputCommandInteraction} interaction
    */
-  run: async (client, interaction, db, langdata) => {
+  run: async (client, interaction) => {
     let name = interaction.options.getString("name");
     let value = interaction.options.getNumber("value");
 
-    let chara = await db.getSelected();
+    const charaSelectMenu = require("../modules/charaSelectMenu");
 
-    if (await db.setStats(name, value)) {
-      interaction.editReply({
-        content: langdata.statset
-          .replace("$1", name)
-          .replace("$2", value)
-          .replace("$3", chara.name),
-        ephemeral: true,
-      });
-    } else {
-      interaction
-        .editReply({
-          content: langdata["no-chara"],
-          ephemeral: true,
-        })
-        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
-    }
+    let selectmenu = await charaSelectMenu(
+      interaction.user,
+      interaction,
+      "all"
+    );
+
+    let msg = await interaction.editReply({
+      content: `Select a character to set a stat`,
+      components: [selectmenu.row],
+    });
+
+    selectmenu(
+      () => msg,
+      async (chara, charas, db) => {
+        let currentChara = await db.getSelected();
+
+        db.select(chara._id);
+        if (await db.setStats(name, value)) {
+          interaction.editReply({
+            content: `Stat ${name} has been added to ${chara.name} with value ${value}`,
+            components: [],
+          });
+        }
+        db.select(currentChara._id);
+      }
+    );
   },
 };

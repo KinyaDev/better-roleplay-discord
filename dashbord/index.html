@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="titles">
+        <h1>Welcome to Better Roleplay</h1>
+        <p>
+          Elevate your roleplaying experience with Better Roleplay! Customize
+          characters, manage them effortlessly, explore immersive locations, and
+          define unique species. Enhance your storytelling with customizable
+          stats and grant access to exclusive content using our key management
+          system. Join now and unleash your creativity!
+        </p>
+      </div>
+    </div>
+
+    <script
+      src="https://code.jquery.com/jquery-3.7.0.slim.js"
+      integrity="sha256-7GO+jepT9gJe9LB4XFf8snVOjX3iYNb0FHYr5LI1N5c="
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      const fragment = new URLSearchParams(window.location.hash.slice(1));
+      const [accessToken, tokenType] = [
+        fragment.get("access_token"),
+        fragment.get("token_type"),
+      ];
+
+      function getCookie(cname) {
+        let name = cname + "=";
+        let decodedCookie = decodeURIComponent(document.cookie);
+        let ca = decodedCookie.split(";");
+        for (let i = 0; i < ca.length; i++) {
+          let c = ca[i];
+          while (c.charAt(0) == " ") {
+            c = c.substring(1);
+          }
+          if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+          }
+        }
+        return "";
+      }
+
+      let container = $(".container");
+
+      if (accessToken) {
+        console.log(accessToken);
+        fetch("https://discord.com/api/users/@me", {
+          headers: {
+            authorization: `${tokenType} ${accessToken}`,
+          },
+        })
+          .then((result) => result.json())
+          .then((response) => {
+            const { username, discriminator } = response;
+            container.append(`<p>info: ${username}#${discriminator}</p>`);
+          })
+          .catch(console.error);
+      } else {
+        window.location.assign(
+          "https://discord.com/api/oauth2/authorize?client_id=1110594506220388352&redirect_uri=http%3A%2F%2F45.137.205.207%3A1028&response_type=token&scope=identify%20guilds"
+        );
+      }
+    </script>
+  </body>
+</html>
+
+<style>
+  .container {
+    margin-left: 20px;
+  }
+  :root {
+    font-family: sans-serif;
+  }
+  .titles {
+    border: 1px solid black;
+    border-radius: 25px;
+    padding: 5px;
+  }
+</style>

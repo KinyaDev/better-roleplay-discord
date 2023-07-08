@@ -2,12 +2,7 @@ const {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   Client,
-  StringSelectMenuBuilder,
-  ActionRowBuilder,
-  ComponentType,
 } = require("discord.js");
-const { CharactersAPI } = require("../modules/db");
-const { CharaEmbed } = require("../modules/embeds");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -23,77 +18,39 @@ module.exports = {
    * @param {Client} client
    * @param {ChatInputCommandInteraction} interaction
    */
-  run: async (client, interaction, d, langdata) => {
+  run: async (client, interaction) => {
+    const { CharactersAPI } = require("../modules/db");
+    const { CharaEmbed } = require("../modules/embeds");
+    const charaSelectMenu = require("../modules/charaSelectMenu");
     let member = interaction.options.getUser("mention");
     if (!member) member = interaction.member.user;
+    let db = new CharactersAPI(member.id);
 
-    let db = new CharactersAPI(member ? member.id : interaction.member.id);
-    let charas = await db.getCharas();
-    let chara = (await db.getSelected()) || charas[0] || undefined;
-
-    if (chara) {
-      async function genSelectMenu(selectedChara) {
-        let selectMenu = new StringSelectMenuBuilder()
-          .setCustomId(`charas`)
-          .setPlaceholder("Make a selection!");
-
-        for (let chara of charas) {
-          if (!selectedChara._id.equals(chara._id)) {
-            selectMenu.addOptions({
-              label: chara.name,
-              value: chara._id.toString(),
-            });
-          }
-        }
-
-        let row = new ActionRowBuilder().setComponents(selectMenu);
-
-        return { row, selectMenu };
-      }
-
-      let newThing = await genSelectMenu(chara);
-
-      let res = await interaction.editReply({
-        embeds: [await CharaEmbed(chara, member, interaction.guild)],
-        components:
-          newThing.selectMenu.options.length !== 0 ? [newThing.row] : undefined,
-        fetchReply: true,
-      });
-
-      const collector = res.createMessageComponentCollector({
-        componentType: ComponentType.StringSelect,
-        time: 3_600_000,
-      });
-
-      collector.on("collect", async (i) => {
-        const selection = i.values[0];
-
-        for (let chara of charas) {
-          if (chara._id.equals(selection)) {
-            let newThing = await genSelectMenu(chara);
-
-            let newi = await interaction.editReply({
-              embeds: [await CharaEmbed(chara, member, interaction.guild)],
-              components:
-                newThing.selectMenu.options.length !== 0
-                  ? [newThing.row]
-                  : undefined,
-            });
-
-            if (newi.embeds[0].author.name === interaction.member.user.username)
-              db.select(chara._id);
-
-            break;
-          }
-        }
-      });
-    } else {
-      interaction
-        .editReply({
-          content: langdata["no-chara"],
-          ephemeral: true,
-        })
-        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
+    let selectmenu;
+    if ((await db.getCharas()).length > 1) {
+      selectmenu = await charaSelectMenu(member, interaction);
     }
+
+    let msg = await interaction.editReply({
+      embeds: [
+        await CharaEmbed(await db.getSelected(), member, interaction.guild),
+      ],
+      components: selectmenu ? [selectmenu.row] : undefined,
+      fetchReply: true,
+    });
+
+    if (selectmenu)
+      selectmenu(
+        () => msg,
+        async (chara, charas, db) => {
+          await interaction.editReply({
+            embeds: [await CharaEmbed(chara, member, interaction.guild)],
+            components: [(await selectmenu.newSelectMenu(chara)).row],
+          });
+
+          if (msg.embeds[0].author.name === interaction.user.username)
+            db.select(chara._id);
+        }
+      );
   },
 };

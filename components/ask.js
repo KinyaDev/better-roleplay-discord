@@ -6,9 +6,7 @@ const { GuildAPI } = require("../modules/db");
  * @param {ButtonInteraction} interaction
  * @param {*} db
  */
-let askInteraction = async (interaction, db) => {
-  let langdata = await new GuildAPI(interaction.guildId).getLangData();
-
+let askInteraction = async (interaction) => {
   if (interaction.customId === "ask") {
     interaction.reply({
       content: "Send now your question here.",

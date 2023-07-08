@@ -9,25 +9,37 @@ module.exports = {
    * @param {Client} client
    * @param {import("discord.js").CommandInteraction} interaction
    */
-  run: async (client, interaction, db, langdata) => {
-    if (await db.delChara()) {
-      interaction.editReply({
-        content: langdata.unregister,
-        ephemeral: true,
-      });
+  run: async (client, interaction) => {
+    const charaSelectMenu = require("../modules/charaSelectMenu");
 
-      let len = (await db.getCharas()).length - 1;
+    let selectmenu = await charaSelectMenu(
+      interaction.user,
+      interaction,
+      "all"
+    );
 
-      if (await db.getChara(len)) {
-        db.select(len);
+    let msg = await interaction.editReply({
+      content: `Select a character to delete`,
+      components: [selectmenu.row],
+    });
+
+    selectmenu(
+      () => msg,
+      async (chara, charas, db) => {
+        if (await db.delChara()) {
+          interaction.editReply({
+            content: `Your character, ${chara.name} has been deleted.`,
+            components: [],
+            ephemeral: true,
+          });
+
+          let newChara = charas[charas.length - 1];
+
+          if (await db.getChara(newChara._id)) {
+            db.select(newChara._id);
+          }
+        }
       }
-    } else {
-      interaction
-        .editReply({
-          content: langdata["no-chara"],
-          ephemeral: true,
-        })
-        .then(() => setTimeout(() => interaction.deleteReply(), 5000));
-    }
+    );
   },
 };

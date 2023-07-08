@@ -3,7 +3,7 @@ const {
   Client,
   ChatInputCommandInteraction,
 } = require("discord.js");
-const { CharaEmbed } = require("../modules/embeds");
+
 const isImageUrl = require("is-image-url");
 
 module.exports = {
@@ -39,13 +39,18 @@ module.exports = {
    * @param {Client} client
    * @param {ChatInputCommandInteraction} interaction
    */
-  run: async (client, interaction, db, langdata) => {
+  run: async (client, interaction) => {
+    const { CharaEmbed } = require("../modules/embeds");
+    const { CharactersAPI } = require("../modules/db");
+
     let name = interaction.options.getString("name");
-    let avatar = interaction.options.getAttachment("avatar").url;
+    let avatar = interaction.options.getAttachment("avatar");
     let bio = interaction.options.getString("bio");
     let species = interaction.options.getString("species");
+    let db = new CharactersAPI(interaction.user.id);
+
     if (avatar) {
-      if (isImageUrl(avatar)) {
+      if (isImageUrl(avatar.url)) {
         await create();
       } else {
         interaction.editReply("Invalid image url");
@@ -53,7 +58,10 @@ module.exports = {
     } else await create();
 
     async function create() {
-      let { _id } = await db.createCharacter(name, avatar);
+      let chara = await db.createCharacter(
+        name,
+        avatar ? avatar.url : undefined
+      );
       if (bio) db.setBio(bio);
 
       if (species) {
@@ -62,11 +70,14 @@ module.exports = {
         db.setSpecies("Human");
       }
 
-      let chara = await db.getChara(_id);
-      interaction.editReply({
-        content: langdata.register.replace("$", name),
-        embeds: [await CharaEmbed(chara, interaction.member.user)],
-      });
+      if (chara) {
+        interaction.editReply({
+          content: `Your character ${chara.name} has been registered.`,
+          embeds: [await CharaEmbed(chara, interaction.member.user)],
+        });
+
+        db.select(chara._id);
+      }
     }
   },
 };
