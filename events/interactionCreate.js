@@ -1,3 +1,5 @@
+const { Client } = require("discord.js");
+
 /**
  *
  * @param {Client} client
@@ -7,7 +9,6 @@ module.exports = async (client, interaction) => {
   const { CharactersAPI, GuildAPI } = require("../modules/db");
   const ask = require("../components/ask");
   const showChara = require("../components/showCharacter");
-  const { Client } = require("discord.js");
 
   // Setup APIs
   let db = new CharactersAPI(interaction.member.id);
@@ -17,7 +18,14 @@ module.exports = async (client, interaction) => {
     db.select((await db.getCharas())[0]._id);
   }
 
-  if (interaction.isCommand()) {
+  if (interaction.isChatInputCommand()) {
+    const command = client.commands.get(interaction.commandName);
+    if (!command) return interaction.reply("This command is outdated");
+    if (command.developer && interaction.user.id !== "505832674217295875")
+      return interaction.reply(
+        "This command is only available for the developer"
+      );
+
     // Get all the commands in client.commands and run the used interaction.
     try {
       await interaction.deferReply({ fetchReply: true });
@@ -36,11 +44,11 @@ module.exports = async (client, interaction) => {
     /* Component Interaction in the interactions/help.js command
      * Button to ask a question and the question is sent in the questions channel of the support server
      */
-    ask(interaction, db);
+    await ask(interaction, db);
 
     /* Component Interaction in the interactions/characters.js command
      * When we select a character in the drop select menu, it does that.
      */
-    showChara(interaction, db);
+    await showChara(interaction, db);
   }
 };
