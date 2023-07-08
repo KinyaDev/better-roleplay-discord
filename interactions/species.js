@@ -41,7 +41,7 @@ module.exports = {
       async (chara, charas, db) => {
         let currentChara = await db.getSelected();
         db.select(chara._id);
-        db.setSpecies(species).then(() => set(interaction, "bio"));
+        db.setSpecies(species).then(() => set(interaction, "species"));
         db.select(currentChara._id);
       }
     );

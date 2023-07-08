@@ -6,6 +6,7 @@ const {
   ActionRowBuilder,
   ComponentType,
 } = require("discord.js");
+const charaSelectMenu = require("../modules/charaSelectMenu");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -35,57 +36,35 @@ module.exports = {
     const { noChara } = require("../modules/errors");
 
     let user = interaction.options.getUser("user");
-    let db = new CharactersAPI(user.id);
-    let charas = await db.getCharas();
+    let db = new CharactersAPI(interaction.user.id);
     let chara = await db.getSelected();
     let balance = interaction.options.getNumber("balance");
     let economy = new EconomyAPI(chara._id);
 
-    if ((await economy.getBankBalance()) >= balance) {
-      let selectmenu = new StringSelectMenuBuilder().setCustomId(
-        "pay-selectmenu"
+    if ((await economy.getPersonalBalance()) >= balance) {
+      let selectmenu = await charaSelectMenu(user, interaction, "all");
+
+      let message = await interaction.editReply({
+        content: `Choose the character of the user. Your character, ${chara.name} will pay them ${balance}.`,
+        components: [selectmenu.row],
+      });
+
+      selectmenu(
+        () => message,
+        async (chara2, charas, db) => {
+          let aimEconomy = new EconomyAPI(chara2._id);
+          economy.setPersonalBalance(
+            (await economy.getPersonalBalance()) - balance
+          );
+          aimEconomy.setPersonalBalance(
+            balance + (await aimEconomy.getPersonalBalance())
+          );
+
+          interaction.followUp(
+            `${chara.name} paid ${chara2.name} ${balance} 💰.`
+          );
+        }
       );
-
-      for (let chara of charas) {
-        selectmenu.addOptions({
-          label: chara.name,
-          value: chara._id.toString(),
-        });
-      }
-
-      if (chara && selectmenu.options.length !== 0) {
-        let message = await interaction.editReply({
-          content: `Choose the character of the user. Your character, ${chara.name} will pay them ${balance}.`,
-          components: [new ActionRowBuilder().addComponents(selectmenu)],
-        });
-
-        const collector = message.createMessageComponentCollector({
-          componentType: ComponentType.StringSelect,
-          max: 1,
-        });
-
-        collector.on("collect", async (i) => {
-          if (i.user.id === interaction.user.id) {
-            for (let chara2 of await db.getCharas()) {
-              let _id = new ObjectId(i.values[0]);
-              if (chara2._id.equals(_id)) {
-                let aimEconomy = new EconomyAPI(chara2._id);
-                economy.setPersonalBalance(
-                  (await economy.getPersonalBalance()) - balance
-                );
-                aimEconomy.setBankBalance(
-                  balance + (await aimEconomy.getPersonalBalance())
-                );
-
-                interaction.followUp(
-                  `${chara.name} paid ${chara.name} ${balance} 💰.`
-                );
-                break;
-              }
-            }
-          }
-        });
-      } else noChara(interaction);
     } else {
       interaction.followUp(
         `Your character, ${

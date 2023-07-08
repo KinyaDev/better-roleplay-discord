@@ -1,7 +1,7 @@
 const { EmbedBuilder, Client } = require("discord.js");
 const { CharactersAPI, EconomyAPI } = require("./db");
 
-async function CharaEmbed(chara, member, guild) {
+async function CharaEmbed(chara, member, client) {
   let db = new CharactersAPI(member.id);
   let economy = new EconomyAPI(chara._id);
 
@@ -30,8 +30,9 @@ async function CharaEmbed(chara, member, guild) {
   } else emb.addFields({ name: "🐱 Species", value: "Human", inline: true });
 
   if (chara.location) {
-    let ch = await guild.channels.fetch(chara.location);
-    emb.addFields({ name: "🗺️ Location", value: ch.name, inline: true });
+    let ch = client.channels.cache.get(chara.location);
+    if (ch)
+      emb.addFields({ name: "🗺️ Location", value: ch.name, inline: true });
   } else emb.addFields({ name: "🗺️ Location", value: "Nowhere", inline: true });
 
   if (await economy.getPersonalBalance()) {
@@ -74,7 +75,7 @@ const helpEmbed = new EmbedBuilder()
     {
       name: "**Place System**",
       value:
-        "Enable/Disable: Customize the place system in your server by using the `/place-system enable` command.\nChannels: Set up specific channels for roleplaying locations using the `/place-system channels [add/delete]` command.\nTravel: Traverse between different places within your roleplaying world with the `/place-system travel` command.\nReset: Reset the place system and clear all location data with the `/place-system reset` command.\nLink/Unlink: Connect or disconnect a roleplaying channel to the place system using the `/place-system link` or `/place-system unlink` command.",
+        "Channels: Set up specific channels for roleplaying locations using the `/place-system channels [add/delete]` command.\nTravel: Traverse between different places within your roleplaying world with the `/travel` command.\nReset: Reset the place system and clear all location data with the `/place-system reset` command.\nLink/Unlink: Connect or disconnect a roleplaying channel to the place system using the `/place-system linking [add/remove/set]` command.",
     },
     {
       name: "**Exclusive RP Access**",
@@ -87,9 +88,14 @@ const helpEmbed = new EmbedBuilder()
         "Set Stats: Define custom stats for your characters using the `/stats-set` command. Set various attributes and abilities to enhance their roleplaying capabilities.\nDelete Stats: Remove unwanted or outdated stats from your character's profile with the `/stats-del` command.",
     },
     {
+      name: "**Economy**",
+      value:
+        "NEW! The bot has now an economy system! Pay other characters with `/pay`. Admins can give, remove, set bank or personal balance to members with `/economy set-balance`, `/economy add-balance` or `/economy remove-balance`. Soon you will be to `/deposit` and `/steal`.",
+    },
+    {
       name: "**Help & Support**",
       value:
-        "For more information, guidance, and frequently asked questions, use the `/help` command. Our helpful and friendly support team is ready to assist you in making the most of our bot. Or join our server with /support command",
+        "For more information, guidance, and frequently asked questions, use the `/help` command. Our helpful and friendly support team is ready to assist you in making the most of our bot. Or join our server with the `/support` command",
     },
   ])
   .setFooter({
@@ -103,11 +109,6 @@ const placeSystemEmbed = new EmbedBuilder()
     "Customize the place system in your server with these subcommands:"
   )
   .setFields([
-    {
-      name: "**Enable/Disable**",
-      value:
-        "Enable or disable the place system in your server.\nUsage: `/place-system enable`, use that command again to disable.",
-    },
     {
       name: "**Channels**",
       value:
@@ -126,7 +127,7 @@ const placeSystemEmbed = new EmbedBuilder()
     {
       name: "**Link/Unlink**",
       value:
-        "Connect or disconnect a roleplaying channel to the place system.\nUsage: `/place-system link` or `/place-system unlink`.",
+        "Connect or disconnect a roleplaying channel to the place system.\nUsage: `/place-system linking [add/remove/set]`",
     },
   ])
   .setFooter({

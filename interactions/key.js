@@ -64,91 +64,58 @@ module.exports = {
       let user = interaction.options.getUser("user");
       let channel = interaction.options.getChannel("channel");
 
-      let selectmenu = await charaSelectMenu(user, interaction);
+      let selectmenu = await charaSelectMenu(user, interaction, "all");
 
-      if (selectmenu.hasChara) {
-        let message = await interaction.editReply({
-          content: `Choose the character of the user. Their character will loose access to ${channel}`,
-          components: [],
-        });
+      let message = await interaction.editReply({
+        content: `Choose the character of the user. Their character will loose access to ${channel}`,
+        components: [selectmenu.row],
+      });
 
-        selectmenu(
-          () => message,
-          async (chara, charas, db) => {
-            let keydb = new KeyPlaceAPI(chara._id);
-            await keydb.remove(channel.id);
+      selectmenu(
+        () => message,
+        async (chara, charas, db) => {
+          let keydb = new KeyPlaceAPI(chara._id);
+          await keydb.remove(channel.id);
 
-            interaction.editReply({
-              content: `${chara.name} (${user}) lose access ${channel}.`,
-              components: [],
-            });
+          interaction.editReply({
+            content: `${chara.name} (${user}) lose access ${channel}.`,
+            components: [],
+          });
 
-            channel.send({
-              content: `${chara.name} (${user}) lose access to ${channel}.`,
-            });
-          }
-        );
-      } else noChara(interaction);
+          channel.send({
+            content: `${chara.name} (${user}) lose access to ${channel}.`,
+          });
+        }
+      );
     }
 
     async function give() {
       let user = interaction.options.getUser("user");
-      let db = new CharactersAPI(user.id);
-      let charas = await db.getCharas();
       let channel = interaction.options.getChannel("channel");
 
-      let selectmenu = new StringSelectMenuBuilder().setCustomId(
-        "keygive-select"
-      );
+      let selectmenu = await charaSelectMenu(user, interaction, "all");
 
-      for (let chara of charas) {
-        selectmenu.addOptions({
-          label: chara.name,
-          value: chara._id.toString(),
-        });
-      }
+      let message = await interaction.editReply({
+        content: `Choose the character of the user. Their character will get the key for ${channel}`,
+        components: [selectmenu.row],
+      });
 
-      if (selectmenu.options.length !== 0) {
-        if (channel instanceof BaseGuildTextChannel) {
-          let message = await interaction.editReply({
-            content: `Choose the character of the user. Their character will have access to ${channel}`,
-            components: [new ActionRowBuilder().addComponents(selectmenu)],
+      selectmenu(
+        () => message,
+        async (chara, charas, db) => {
+          let keydb = new KeyPlaceAPI(chara._id);
+          await keydb.give(channel.id);
+
+          interaction.editReply({
+            content: `${chara.name} (${user}) got the key for ${channel}.`,
+            components: [],
           });
 
-          const collector = message.createMessageComponentCollector({
-            componentType: ComponentType.StringSelect,
-            max: 1,
-          });
-
-          collector.on("collect", async (i) => {
-            if (i.user.id === interaction.user.id) {
-              for (let chara of await db.getCharas()) {
-                let _id = new ObjectId(i.values[0]);
-                if (chara._id.equals(_id)) {
-                  let keydb = new KeyPlaceAPI(chara._id);
-                  await keydb.give(channel.id);
-
-                  interaction.editReply({
-                    content: `${chara.name} (${user}) got the key for ${channel}.`,
-                    components: [],
-                  });
-
-                  channel.send({
-                    content: `${chara.name} (${user}) got the key for ${channel}.`,
-                  });
-
-                  break;
-                }
-              }
-            }
+          channel.send({
+            content: `${chara.name} (${user}) got the key for ${channel}.`,
           });
         }
-      } else {
-        interaction.editReply({
-          content: langdata["no-chara"],
-          ephemeral: true,
-        });
-      }
+      );
     }
 
     let channel = interaction.options.getChannel("channel");

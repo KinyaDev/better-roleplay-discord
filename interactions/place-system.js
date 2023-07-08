@@ -10,9 +10,9 @@ module.exports = {
     .setDescription("Place system of the bot")
     .addSubcommand((sc) =>
       sc
-        .setName("channel_ids")
+        .setName("channels")
         .setDescription(
-          " Set roleplaying location channels with the /place-system channels [add/delete] command."
+          "Set roleplaying location channels with the /place-system channels [add/delete] command."
         )
         .addStringOption((opt) =>
           opt
@@ -28,7 +28,7 @@ module.exports = {
           opt
             .setName("channel_ids")
             .setDescription(
-              "Category IDs to be marked as roleplay places, seperated by comma."
+              " Set roleplaying location channels with the /place-system channels [add/delete] command."
             )
             .setRequired(true)
         )
@@ -151,11 +151,10 @@ module.exports = {
       } else noPerm(interaction);
     } else if (interaction.options.getSubcommand() === "channels") {
       if (interaction.memberPermissions.has("Administrator")) {
-        let ids = interaction.options.getString("channels");
         let type = interaction.options.getString("type");
 
         if (type === "add") {
-          let toAdd = await rp.addChannels(ids);
+          let toAdd = await rp.addChannels(channel_ids);
           interaction
             .editReply({
               content: `Roleplay categories added! ${toAdd.map(
@@ -165,7 +164,7 @@ module.exports = {
             })
             .then(() => setTimeout(() => interaction.deleteReply(), 5000));
         } else {
-          let toDel = await rp.deleteChannels(ids);
+          let toDel = await rp.deleteChannels(channel_ids);
           interaction.editReply({
             content: `Roleplay categories removed! ${toDel.map(
               (id) => `<#${id}>`

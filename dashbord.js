@@ -7,6 +7,8 @@ let api_endpoint = "https://discord.com/api/v10";
 
 app.set("port", process.env.PORT);
 app.use(cookieParser());
+app.use(express.json());
+app.use(express.urlencoded());
 app.use(express.static(__dirname + "/dashbord"));
 app.get("/", (req, res) => {
   let token = req.cookies.token;
@@ -15,6 +17,18 @@ app.get("/", (req, res) => {
   }
 
   res.sendFile(__dirname + "/dashbord/index.html");
+});
+
+app.get("/terms", (req, res) => {
+  res.sendFile(__dirname + "/dashbord/term-of-service.html");
+});
+
+app.get("/privacy", (req, res) => {
+  res.sendFile(__dirname + "/dashbord/privacy-policy.html");
+});
+
+app.post("/api/log/:msg", (req, res) => {
+  console.log(req.params.msg);
 });
 
 // Make online the dashbord

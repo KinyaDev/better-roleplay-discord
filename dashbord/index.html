@@ -3,10 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Better Roleplay Dashbord</title>
   </head>
   <body>
     <div class="container">
+      <ul>
+        <li><a href="/privacy">Privacy Policy</a></li>
+        <li><a href="/terms">Terms of Service</a></li>
+      </ul>
       <div class="titles">
         <h1>Welcome to Better Roleplay</h1>
         <p>
@@ -19,54 +23,72 @@
       </div>
     </div>
 
+    <h1>WORK IN PROGRESS</h1>
+    <img
+      src="https://i.pinimg.com/originals/19/bc/35/19bc35ab4e70986ce6a36f6d0d44e179.gif"
+    />
+
+    <ul>
+      <p>GOALS</p>
+      <li>Reach 500 active servers to make a brand new dashbord</li>
+      <li>
+        We need your help to integrate ChatGPT (making automated NPCs)! Fund me,
+        join the discord server with /support!
+      </li>
+    </ul>
+
     <script
       src="https://code.jquery.com/jquery-3.7.0.slim.js"
       integrity="sha256-7GO+jepT9gJe9LB4XFf8snVOjX3iYNb0FHYr5LI1N5c="
       crossorigin="anonymous"
     ></script>
     <script>
-      const fragment = new URLSearchParams(window.location.hash.slice(1));
-      const [accessToken, tokenType] = [
-        fragment.get("access_token"),
-        fragment.get("token_type"),
-      ];
+      window.addEventListener("load", async (ev) => {
+        const fragment = new URLSearchParams(window.location.hash.slice(1));
+        const [accessToken, tokenType] = [
+          fragment.get("access_token"),
+          fragment.get("token_type"),
+        ];
 
-      function getCookie(cname) {
-        let name = cname + "=";
-        let decodedCookie = decodeURIComponent(document.cookie);
-        let ca = decodedCookie.split(";");
-        for (let i = 0; i < ca.length; i++) {
-          let c = ca[i];
-          while (c.charAt(0) == " ") {
-            c = c.substring(1);
+        function getCookie(cname) {
+          let name = cname + "=";
+          let decodedCookie = decodeURIComponent(document.cookie);
+          let ca = decodedCookie.split(";");
+          for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) == " ") {
+              c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+              return c.substring(name.length, c.length);
+            }
           }
-          if (c.indexOf(name) == 0) {
-            return c.substring(name.length, c.length);
-          }
+          return "";
         }
-        return "";
-      }
 
-      let container = $(".container");
+        let container = $(".container");
 
-      if (accessToken) {
-        console.log(accessToken);
-        fetch("https://discord.com/api/users/@me", {
-          headers: {
-            authorization: `${tokenType} ${accessToken}`,
-          },
-        })
-          .then((result) => result.json())
-          .then((response) => {
-            const { username, discriminator } = response;
-            container.append(`<p>info: ${username}#${discriminator}</p>`);
-          })
-          .catch(console.error);
-      } else {
-        window.location.assign(
-          "https://discord.com/api/oauth2/authorize?client_id=1110594506220388352&redirect_uri=http%3A%2F%2F45.137.205.207%3A1028&response_type=token&scope=identify%20guilds"
-        );
-      }
+        if (accessToken) {
+          let result = await fetch("https://discord.com/api/users/@me", {
+            headers: {
+              authorization: `${tokenType} ${accessToken}`,
+            },
+          });
+
+          const { username, discriminator, id } = await result.json();
+
+          await fetch(
+            `/api/log/Someone logged in the dashbord: ${username} (${id})`,
+            {
+              method: "post",
+            }
+          );
+        } else {
+          window.location.assign(
+            "https://discord.com/api/oauth2/authorize?client_id=1110594506220388352&redirect_uri=https%3A%2F%2Fbetter-roleplay.swameta.fr&response_type=token&scope=guilds%20identify"
+          );
+        }
+      });
     </script>
   </body>
 </html>

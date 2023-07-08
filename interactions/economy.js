@@ -118,7 +118,7 @@ module.exports = {
 
         let message = await interaction.editReply({
           content: `Their ${type} balance will be ${type2} to ${balance} after selecting the character of the user.`,
-          components: [new ActionRowBuilder().addComponents(selectmenu)],
+          components: [selectmenu.row],
         });
 
         selectmenu(

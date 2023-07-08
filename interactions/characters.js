@@ -32,9 +32,7 @@ module.exports = {
     }
 
     let msg = await interaction.editReply({
-      embeds: [
-        await CharaEmbed(await db.getSelected(), member, interaction.guild),
-      ],
+      embeds: [await CharaEmbed(await db.getSelected(), member, client)],
       components: selectmenu ? [selectmenu.row] : undefined,
       fetchReply: true,
     });
