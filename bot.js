@@ -22,6 +22,11 @@ const client = new Client({
   ],
   allowedMentions: { parse: [] },
 });
+let annoucements = require("./annoucements.json");
+
+chokidar.watch(`./annoucements.json`).on("change", () => {
+  annoucements = require("./annoucements.json");
+});
 
 client.on(Events.ClientReady, async (c) => {
   console.log(
@@ -29,8 +34,6 @@ client.on(Events.ClientReady, async (c) => {
   );
 
   setInterval(() => {
-    let annoucements = require("./annoucements.json");
-
     client.user.setActivity({
       type: ActivityType.Listening,
       name: annoucements[Math.floor(Math.random() * annoucements.length)],
