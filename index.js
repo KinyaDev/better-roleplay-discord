@@ -7,6 +7,8 @@ const { loadCommands, loadEvents } = require("./load");
 console.clear();
 
 botProcess(async (client, { annoucements }) => {
+  require("./dashbord")(client);
+
   await loadCommands(client);
   await loadEvents(client);
 
@@ -37,8 +39,10 @@ botProcess(async (client, { annoucements }) => {
 
   setInterval(() => {
     client.user.setActivity({
-      type: ActivityType.Watching,
-      name: annoucements[Math.floor(Math.random() * annoucements.length)],
+      type: ActivityType.Playing,
+      name: annoucements[
+        Math.floor(Math.random() * annoucements.length)
+      ].replace("$guilds", client.guilds.cache.size),
     });
   }, 5000);
 
@@ -46,5 +50,3 @@ botProcess(async (client, { annoucements }) => {
     `Logged in as ${client.user.username} in ${client.guilds.cache.size} servers.`
   );
 });
-
-require("./dashbord");
