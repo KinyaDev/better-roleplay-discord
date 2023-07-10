@@ -56,34 +56,37 @@ module.exports = {
    */
   run: async (client, interaction, d, langdata) => {
     const { KeyPlaceAPI, CharactersAPI } = require("../modules/db");
-    const { ObjectId } = require("mongodb");
-    const { noChara } = require("../modules/errors");
-    const charaSelectMenu = require("../modules/charaSelectMenu");
 
     async function remove() {
       let user = interaction.options.getUser("user");
       let channel = interaction.options.getChannel("channel");
 
-      let selectmenu = await charaSelectMenu(user, interaction, "all");
+      const CharaSel = await require("../modules/charaSelectMenu")(
+        user,
+        interaction
+      );
+
+      let menu = await CharaSel.genMenu();
 
       let message = await interaction.editReply({
-        content: `Choose the character of the user. Their character will loose access to ${channel}`,
-        components: [selectmenu.row],
+        content: `Choose the character of the user. Their character will get the key for ${channel}`,
+        components: menu.selectMenu.options.length >= 1 ? [menu.row] : null,
+        fetchReply: true,
       });
 
-      selectmenu(
-        () => message,
+      let collector = CharaSel.genCollector(
+        message,
         async (chara, charas, db) => {
           let keydb = new KeyPlaceAPI(chara._id);
           await keydb.remove(channel.id);
 
           interaction.editReply({
-            content: `${chara.name} (${user}) lose access ${channel}.`,
+            content: `${chara.name} (${user}) got the key for ${channel}.`,
             components: [],
           });
 
           channel.send({
-            content: `${chara.name} (${user}) lose access to ${channel}.`,
+            content: `${chara.name} (${user}) got the key for ${channel}.`,
           });
         }
       );
@@ -93,15 +96,21 @@ module.exports = {
       let user = interaction.options.getUser("user");
       let channel = interaction.options.getChannel("channel");
 
-      let selectmenu = await charaSelectMenu(user, interaction, "all");
+      const CharaSel = await require("../modules/charaSelectMenu")(
+        user,
+        interaction
+      );
+
+      let menu = await CharaSel.genMenu();
 
       let message = await interaction.editReply({
         content: `Choose the character of the user. Their character will get the key for ${channel}`,
-        components: [selectmenu.row],
+        components: menu.selectMenu.options.length >= 1 ? [menu.row] : null,
+        fetchReply: true,
       });
 
-      selectmenu(
-        () => message,
+      let collector = CharaSel.genCollector(
+        message,
         async (chara, charas, db) => {
           let keydb = new KeyPlaceAPI(chara._id);
           await keydb.give(channel.id);

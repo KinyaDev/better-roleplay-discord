@@ -3,6 +3,7 @@ const {
   ChatInputCommandInteraction,
   Client,
 } = require("discord.js");
+const { CharactersAPI } = require("../modules/db");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -22,28 +23,27 @@ module.exports = {
   run: async (client, interaction) => {
     let name = interaction.options.getString("name");
 
-    const charaSelectMenu = require("../modules/charaSelectMenu");
-
-    let selectmenu = await charaSelectMenu(
+    const CharaSel = await require("../modules/charaSelectMenu")(
       interaction.user,
-      interaction,
-      "all"
+      interaction
     );
 
-    let msg = await interaction.editReply({
-      content: `Select a character to del a stat`,
-      components: [selectmenu.row],
+    let menu = await CharaSel.genMenu();
+
+    let message = interaction.editReply({
+      content: "Select a character to se the species",
+      components: menu.selectMenu.options.length >= 1 ? [menu.row] : null,
+      fetchReply: true,
     });
 
-    selectmenu(
-      () => msg,
+    let collector = CharaSel.genCollector(
+      message,
       async (chara, charas, db) => {
-        let currentChara = await db.getSelected();
-
+        let currentChara = await CharaSelector.getSelected();
         db.select(chara._id);
         if (await db.setStats(name, 0)) {
           interaction.editReply({
-            content: `Stat ${name} has been deleted for ${chara.name}`,
+            content: `Stat ${name} has been deleted for ${chara.name}.`,
             components: [],
           });
         }

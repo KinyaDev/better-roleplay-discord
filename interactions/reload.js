@@ -5,6 +5,7 @@ const {
 } = require("discord.js");
 
 module.exports = {
+  developer: true,
   data: new SlashCommandBuilder()
     .setName("reload")
     .setDescription("Reload commands"),

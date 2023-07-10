@@ -29,24 +29,23 @@ module.exports = {
     let name = interaction.options.getString("name");
     let value = interaction.options.getNumber("value");
 
-    const charaSelectMenu = require("../modules/charaSelectMenu");
-
-    let selectmenu = await charaSelectMenu(
+    const CharaSel = await require("../modules/charaSelectMenu")(
       interaction.user,
-      interaction,
-      "all"
+      interaction
     );
 
-    let msg = await interaction.editReply({
-      content: `Select a character to set a stat`,
-      components: [selectmenu.row],
+    let menu = await CharaSel.genMenu();
+
+    let message = interaction.editReply({
+      content: "Select a character to se the species",
+      components: menu.selectMenu.options.length >= 1 ? [menu.row] : null,
+      fetchReply: true,
     });
 
-    selectmenu(
-      () => msg,
+    let collector = CharaSel.genCollector(
+      message,
       async (chara, charas, db) => {
-        let currentChara = await db.getSelected();
-
+        let currentChara = await CharaSelector.getSelected();
         db.select(chara._id);
         if (await db.setStats(name, value)) {
           interaction.editReply({

@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require("discord.js");
+const { CharactersAPI } = require("../modules/db");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -10,34 +11,38 @@ module.exports = {
    * @param {import("discord.js").CommandInteraction} interaction
    */
   run: async (client, interaction) => {
-    const charaSelectMenu = require("../modules/charaSelectMenu");
-
-    let selectmenu = await charaSelectMenu(
+    const CharaSel = await require("../modules/charaSelectMenu")(
       interaction.user,
-      interaction,
-      "all"
+      interaction
     );
 
-    let msg = await interaction.editReply({
+    let menu = await CharaSel.genMenu();
+
+    let message = await interaction.editReply({
       content: `Select a character to delete`,
-      components: [selectmenu.row],
+      components: menu.selectMenu.options.length >= 1 ? [menu.row] : null,
+      fetchReply: true,
     });
 
-    selectmenu(
-      () => msg,
-      async (chara, charas, db) => {
+    let collector = CharaSel.genCollector(
+      message,
+      async (chara, charas2, db) => {
+        let currentChara = await db.getSelected();
+        db.select(chara._id);
         if (await db.delChara()) {
           interaction.editReply({
             content: `Your character, ${chara.name} has been deleted.`,
             components: [],
-            ephemeral: true,
           });
+        }
 
-          let newChara = charas[charas.length - 1];
+        db.select(currentChara._id);
 
-          if (await db.getChara(newChara._id)) {
-            db.select(newChara._id);
-          }
+        let charas = await db.getCharas();
+        let newChara = charas[charas.length - 1];
+
+        if (newChara && (await db.getChara(newChara._id))) {
+          db.select(newChara._id);
         }
       }
     );

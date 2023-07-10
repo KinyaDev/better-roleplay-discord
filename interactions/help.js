@@ -19,48 +19,11 @@ module.exports = {
    * @param {ChatInputCommandInteraction} interaction
    */
   run: async (client, interaction) => {
-    const { helpEmbed, placeSystemEmbed } = require("../modules/embeds");
-
-    let btn = new ButtonBuilder()
-      .setCustomId("ask")
-      .setLabel("Ask")
-      .setStyle(ButtonStyle.Primary);
-
-    let row = new ActionRowBuilder().setComponents(btn);
-    interaction.editReply({
-      embeds: [
-        helpEmbed,
-        placeSystemEmbed,
-        {
-          title: "F.A.Q",
-          description: "There are no frequently asked questions. Ask now!",
-          footer: { text: "Created by KinyaDev" },
-        },
-      ],
-      components: [row],
-      ephemeral: false,
-    });
+    const { helpCommand } = require("../modules/embeds");
+    await helpCommand(interaction);
   },
   runMessage: async (client, message) => {
-    const { helpEmbed, placeSystemEmbed } = require("../modules/embeds");
-
-    let btn = new ButtonBuilder()
-      .setCustomId("ask")
-      .setLabel("Ask")
-      .setStyle(ButtonStyle.Primary);
-
-    let row = new ActionRowBuilder().setComponents(btn);
-    message.reply({
-      embeds: [
-        helpEmbed,
-        placeSystemEmbed,
-        {
-          title: "F.A.Q",
-          description: "There are no frequently asked questions. Ask now!",
-          footer: { text: "Created by KinyaDev" },
-        },
-      ],
-      components: [row],
-    });
+    const { helpCommand } = require("../modules/embeds");
+    await helpCommand(message);
   },
 };

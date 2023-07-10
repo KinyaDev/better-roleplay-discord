@@ -8,7 +8,6 @@ const { Client } = require("discord.js");
 module.exports = async (client, interaction) => {
   const { CharactersAPI, GuildAPI } = require("../modules/db");
   const ask = require("../components/ask");
-  const showChara = require("../components/showCharacter");
 
   // Setup APIs
   let db = new CharactersAPI(interaction.member.id);
@@ -45,10 +44,5 @@ module.exports = async (client, interaction) => {
      * Button to ask a question and the question is sent in the questions channel of the support server
      */
     await ask(interaction, db);
-
-    /* Component Interaction in the interactions/characters.js command
-     * When we select a character in the drop select menu, it does that.
-     */
-    await showChara(interaction, db);
   }
 };

@@ -32,8 +32,6 @@ module.exports = {
    */
   run: async (client, interaction) => {
     const { CharactersAPI, EconomyAPI } = require("../modules/db");
-    const { ObjectId } = require("mongodb");
-    const { noChara } = require("../modules/errors");
 
     let user = interaction.options.getUser("user");
     let db = new CharactersAPI(interaction.user.id);
@@ -41,16 +39,20 @@ module.exports = {
     let balance = interaction.options.getNumber("balance");
     let economy = new EconomyAPI(chara._id);
 
-    if ((await economy.getPersonalBalance()) >= balance) {
-      let selectmenu = await charaSelectMenu(user, interaction, "all");
+    const CharaSel = await require("../modules/charaSelectMenu")(
+      user,
+      interaction
+    );
 
-      let message = await interaction.editReply({
+    if ((await economy.getPersonalBalance()) >= balance) {
+      let message = interaction.editReply({
         content: `Choose the character of the user. Your character, ${chara.name} will pay them ${balance}.`,
-        components: [selectmenu.row],
+        components: menu.selectMenu.options.length >= 1 ? [menu.row] : null,
+        fetchReply: true,
       });
 
-      selectmenu(
-        () => message,
+      let collector = CharaSel.genCollector(
+        message,
         async (chara2, charas, db) => {
           let aimEconomy = new EconomyAPI(chara2._id);
           economy.setPersonalBalance(
@@ -65,12 +67,11 @@ module.exports = {
           );
         }
       );
-    } else {
+    } else
       interaction.followUp(
         `Your character, ${
           chara.name
         }, don't have enough (they have ${await economy.getPersonalBalance()} 💰)!`
       );
-    }
   },
 };

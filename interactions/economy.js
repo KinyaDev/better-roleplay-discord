@@ -105,27 +105,30 @@ module.exports = {
    */
   run: async (client, interaction) => {
     const { EconomyAPI } = require("../modules/db");
-    const { noChara } = require("../modules/errors");
 
-    let user = interaction.options.getMember("user") || interaction.member;
+    let user = interaction.options.getMember("user") || interaction.user;
     let type = interaction.options.getString("type");
     let balance = interaction.options.getNumber("balance");
-    const charaSelectMenu = require("../modules/charaSelectMenu");
 
     if (interaction.memberPermissions.has("Administrator")) {
       async function doTheThing(type2, callback) {
-        let selectmenu = await charaSelectMenu(user, interaction, "all");
+        const CharaSel = await require("../modules/charaSelectMenu")(
+          user,
+          interaction
+        );
+
+        let menu = await CharaSel.genMenu();
 
         let message = await interaction.editReply({
-          content: `Their ${type} balance will be ${type2} to ${balance} after selecting the character of the user.`,
-          components: [selectmenu.row],
+          content: `Select a character to ${type2} the ${type} balance.`,
+          components: menu.selectMenu.options.length >= 1 ? [menu.row] : null,
+          fetchReply: true,
         });
 
-        selectmenu(
-          () => message,
+        let collector = CharaSel.genCollector(
+          message,
           async (chara, charas, db) => {
-            await callback(chara);
-            setTimeout(() => interaction.deleteReply(), 5000);
+            callback(chara);
           }
         );
       }
@@ -144,7 +147,7 @@ module.exports = {
       }
 
       if (interaction.options.getSubcommand() === "add-balance") {
-        await doTheThing("added", async (chara) => {
+        await doTheThing("add", async (chara) => {
           let economy = new EconomyAPI(chara._id);
           let newBankBalance = balance + (await economy.getBankBalance());
           let newPersonalBalance =
@@ -163,7 +166,7 @@ module.exports = {
         });
       }
       if (interaction.options.getSubcommand() === "remove-balance") {
-        await doTheThing("removed", async (chara) => {
+        await doTheThing("remove", async (chara) => {
           let economy = new EconomyAPI(chara._id);
           let newBankBalance = (await economy.getBankBalance()) - balance;
           let newPersonalBalance =

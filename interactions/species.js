@@ -3,6 +3,7 @@ const {
   ChatInputCommandInteraction,
   Client,
 } = require("discord.js");
+const { CharactersAPI } = require("../modules/db");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -23,21 +24,21 @@ module.exports = {
     const { set } = require("../modules/errors");
     let species = interaction.options.getString("species");
 
-    const charaSelectMenu = require("../modules/charaSelectMenu");
-
-    let selectmenu = await charaSelectMenu(
+    const CharaSel = await require("../modules/charaSelectMenu")(
       interaction.user,
-      interaction,
-      "all"
+      interaction
     );
 
-    let msg = await interaction.editReply({
-      content: `Select a character to set the species`,
-      components: [selectmenu.row],
+    let menu = await CharaSel.genMenu();
+
+    let message = await interaction.editReply({
+      content: "Select a character to se the species",
+      components: menu.selectMenu.options.length > 1 ? [menu.row] : null,
+      fetchReply: true,
     });
 
-    selectmenu(
-      () => msg,
+    let collector = CharaSel.genCollector(
+      message,
       async (chara, charas, db) => {
         let currentChara = await db.getSelected();
         db.select(chara._id);

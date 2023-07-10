@@ -19,13 +19,15 @@ let askInteraction = async (interaction) => {
       max: 1,
     });
 
-    let questionChannel = await interaction.guild.channels.fetch(
+    let questionChannel = interaction.client.channels.cache.get(
       "1124969295370272860"
     );
 
     let msg = collected.first();
-    questionChannel.send(`${msg.author}'s question: ${msg.content}`);
-    interaction.deleteReply();
+    if (questionChannel) {
+      questionChannel.send(`${msg.author}'s question: ${msg.content}`);
+      interaction.deleteReply();
+    }
 
     msg.delete();
   }
