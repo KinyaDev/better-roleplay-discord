@@ -1,6 +1,6 @@
 const { ButtonInteraction } = require("discord.js");
 const { GuildAPI } = require("../modules/db");
-
+require("dotenv").config();
 /**
  *
  * @param {ButtonInteraction} interaction
@@ -20,7 +20,7 @@ let askInteraction = async (interaction) => {
     });
 
     let questionChannel = interaction.client.channels.cache.get(
-      "1124969295370272860"
+      process.env.QUESTIONS_CHANNEL
     );
 
     let msg = collected.first();

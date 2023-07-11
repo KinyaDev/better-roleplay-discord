@@ -45,6 +45,13 @@ module.exports = {
           message = message.replace(`$${i + 1}`, `${s.name}: ${s.value}`);
         });
 
+        interaction
+          .followUp({
+            content: `Help: if you want to select another character, do the \`/characters\` commands and select another character`,
+            ephemeral: true,
+          })
+          .then((msg) => setTimeout(msg.delete, 5000));
+
         await webhookify.send(
           interaction.channelId,
           chara.name,
