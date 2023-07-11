@@ -199,9 +199,7 @@ class CharactersAPI {
       return await statsCollection.find({ chara: id }).toArray();
     } else {
       let selected = await this.getSelected();
-      return selected
-        ? await statsCollection.find({ chara: selected._id }).toArray()
-        : [];
+      return await statsCollection.find({ chara: selected._id }).toArray();
     }
   }
 

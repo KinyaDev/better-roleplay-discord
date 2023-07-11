@@ -7,7 +7,8 @@ const { loadCommands, loadEvents } = require("./load");
 console.clear();
 
 botProcess(async (client, { annoucements }) => {
-  require("./dashbord")(client);
+  let dashbord = require("./dashbord");
+  dashbord.setClient(client);
 
   await loadCommands(client);
   await loadEvents(client);

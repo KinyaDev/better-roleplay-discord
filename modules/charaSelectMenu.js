@@ -11,21 +11,25 @@ module.exports = async (member, interaction) => {
   let db = new CharactersAPI(member.id);
   let charas = await db.getCharas();
 
-  function genCollector(message, callback) {
-    const collector = message.createMessageComponentCollector({
-      componentType: ComponentType.StringSelect,
-      time: 3_600_000,
-    });
+  async function genCollector(message, callback) {
+    if (message.createMessageComponentCollector) {
+      const collector = message.createMessageComponentCollector({
+        componentType: ComponentType.StringSelect,
+        time: 3_600_000,
+      });
 
-    collector.on("collect", async (i) => {
-      const selection = i.values[0];
+      collector.on("collect", async (i) => {
+        const selection = i.values[0];
 
-      for (let chara of charas) {
-        if (chara._id.equals(new ObjectId(selection))) {
-          await callback(chara, charas, db);
+        for (let chara of charas) {
+          if (chara._id.equals(new ObjectId(selection))) {
+            await callback(chara, charas, db);
+          }
         }
-      }
-    });
+      });
+    } else {
+      await callback(await db.getSelected(), charas, db);
+    }
   }
 
   async function genMenu() {

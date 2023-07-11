@@ -47,7 +47,7 @@ module.exports = {
 
         interaction
           .followUp({
-            content: `Help: if you want to select another character, do the \`/characters\` commands and select another character`,
+            content: `Help: if you want to select another character, do the \`/characters\` command and select another character`,
             ephemeral: true,
           })
           .then((msg) => setTimeout(msg.delete, 5000));

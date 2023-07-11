@@ -31,7 +31,7 @@ module.exports = {
     let menu = await CharaSel.genMenu();
 
     let message = interaction.editReply({
-      content: "Select a character to se the species",
+      content: "Select a character to set the stat",
       components: menu.selectMenu.options.length >= 1 ? [menu.row] : null,
       fetchReply: true,
     });
@@ -39,7 +39,7 @@ module.exports = {
     let collector = CharaSel.genCollector(
       message,
       async (chara, charas, db) => {
-        let currentChara = await CharaSelector.getSelected();
+        let currentChara = await db.getSelected();
         db.select(chara._id);
         if (await db.setStats(name, 0)) {
           interaction.editReply({

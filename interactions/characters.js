@@ -37,9 +37,18 @@ module.exports = {
 
     function newSelectMenu() {
       let sl = menu.selectMenu;
-      sl.options = sl.options.filter(async (v, i) =>
-        (await db.getSelected())._id.equals(v.data.value)
-      );
+      if (!sl.options) {
+        sl = {
+          options: {
+            length: 0,
+          },
+        };
+      } else {
+        sl.options = sl.options.filter(async (v, i) =>
+          (await db.getSelected())._id.equals(v.data.value)
+        );
+      }
+
       return sl;
     }
 

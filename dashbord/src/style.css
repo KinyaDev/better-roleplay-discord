@@ -1,5 +1,7 @@
-:root {
-  font-family: Arial, sans-serif;
+*,
+*:before,
+*:after {
+  font-family: sans-serif;
 }
 
 body {
@@ -135,4 +137,91 @@ body {
 .guild-card h3 {
   font-size: 18px;
   margin-bottom: 5px;
+}
+
+.characters select {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-shadow: none;
+  background-color: #fff;
+  color: #333;
+}
+
+.selectedChara {
+  margin-top: 20px;
+}
+
+.selectedChara h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+#chara-details {
+  background-color: #f9f9f9;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  width: 600px;
+  height: 250px;
+}
+
+#chara-details p {
+  margin: 5px 0;
+}
+
+#chara-details ul {
+  padding-left: 20px;
+}
+
+#chara-details img {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  object-position: 100% 0;
+  transform: translate(400px, -250px);
+}
+
+#chara-details ul li {
+  list-style-type: disc;
+}
+
+.delete-btn,
+.save-btn {
+  height: 30px;
+  width: 70px;
+  font-weight: bold;
+  color: white;
+  border-radius: 15px;
+  border: 0px;
+  margin-top: 2px;
+}
+
+.delete-btn {
+  background-color: red;
+}
+
+.save-btn {
+  margin-left: 480px;
+  background-color: green;
+}
+
+.input {
+  height: 30px;
+  width: 200px;
+  border-radius: 10px;
+  text-indent: 3px;
+  border: 0.7px solid black;
+}
+
+.bio-input {
+  height: 100px;
+  width: 200px;
+  resize: none;
+  border-radius: 10px;
+  text-indent: 3px;
+  border: 0.7px solid black;
+  overflow: hidden;
 }

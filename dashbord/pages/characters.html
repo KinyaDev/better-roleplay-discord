@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Better Roleplay Dashboard</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div id="container">
+      <div id="header">
+        <h1>Better Roleplay</h1>
+      </div>
+      <div id="content">
+        <div class="characters">
+          <select name="chara-list" id="chara-list">
+            <option value="">--Please choose an option--</option>
+          </select>
+        </div>
+        <div class="selectedChara" style="display: none">
+          <h2>Character Details</h2>
+          <div id="chara-details"></div>
+          <button class="save-btn">Save</button>
+          <button class="delete-btn">Delete</button>
+        </div>
+        <div class="work-in-progress">
+          <h1>Work in Progress</h1>
+          <br />
+          <img
+            src="https://i.pinimg.com/originals/19/bc/35/19bc35ab4e70986ce6a36f6d0d44e179.gif"
+            alt="Work in Progress"
+          />
+        </div>
+
+        <div id="footer">
+          <ul>
+            <li><a href="/privacy">Privacy Policy</a></li>
+            <li><a href="/terms">Terms of Service</a></li>
+            <li><a href="/">Home</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <script src="/lib.js"></script>
+    <script src="/characters.js"></script>
+  </body>
+</html>
