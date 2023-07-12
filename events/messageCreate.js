@@ -1,5 +1,10 @@
 const { Client, Message } = require("discord.js");
-const { CharactersAPI, GuildAPI, AutoProxyAPI } = require("../modules/db");
+const {
+  CharactersAPI,
+  GuildAPI,
+  AutoProxyAPI,
+  parseCharaMessage,
+} = require("../modules/db");
 const webhooks = require("../modules/webhooks");
 
 /**
@@ -25,29 +30,49 @@ module.exports = async (client, message) => {
 
   let db = new CharactersAPI(message.author.id);
   let chara = await db.getSelected();
+  let charas = await db.getCharas();
 
   if (message.reference) {
     const repliedTo = await message.channel.messages.fetch(
       message.reference.messageId
     );
+    for (let chara of charas) {
+      if (chara && repliedTo.author.username === chara.name) {
+        let msg = message.content;
+        if (!(msg.startsWith("\\") || msg.startsWith("("))) {
+          if (msg === "`delete`") {
+            repliedTo.delete();
+            message.delete();
+          } else {
+            webhookify.edit(
+              message.channel.id,
+              repliedTo.id,
+              chara.name,
+              chara.avatar || message.author.displayAvatarURL(),
+              await parseCharaMessage(chara, db, message)
+            );
 
-    if (chara && repliedTo.author.username === chara.name) {
-      let msg = message.content;
-      if (!(msg.startsWith("\\") || msg.startsWith("("))) {
-        if (msg === "`delete`") {
-          repliedTo.delete();
-          message.delete();
-        } else {
-          (await db.getStats()).forEach((s, i) => {
-            msg = msg.replace(`$${i}`, `${s.name}: ${s.value}`);
-          });
-
-          webhookify.edit(
+            message.delete();
+          }
+        }
+      }
+    }
+  } else {
+    let charas = await db.getCharas();
+    for (let chara of charas) {
+      if (chara.bracket) {
+        let splitted = chara.bracket.split("text");
+        if (
+          message.content.startsWith(splitted[0]) &&
+          message.content.endsWith(splitted[1])
+        ) {
+          await webhookify.send(
             message.channel.id,
-            repliedTo.id,
             chara.name,
             chara.avatar || message.author.displayAvatarURL(),
-            msg
+            (await parseCharaMessage(chara, db, message))
+              .replace(new RegExp(`^(${splitted[0]})`), "")
+              .replace(new RegExp(`(${splitted[1]})$`), "")
           );
 
           message.delete();
@@ -66,17 +91,11 @@ module.exports = async (client, message) => {
       !(message.content.startsWith("\\") || message.content.startsWith("("))
     ) {
       if (chara) {
-        let stats = await db.getStats();
-        let msg = message.content;
-        stats.forEach((s, i) => {
-          msg = msg.replace(`$${i}`, `${s.name}: ${s.value}`);
-        });
-
         await webhookify.send(
           message.channelId,
           chara.name,
           chara.avatar || message.author.displayAvatarURL(),
-          msg
+          parseCharaMessage(chara, db, message.content)
         );
 
         message.delete();

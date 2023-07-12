@@ -70,12 +70,10 @@ module.exports = {
 
         if (message.embeds[0].author.name === interaction.user.username) {
           db.select(chara._id);
-          interaction
-            .followUp({
-              content: `Your character, ${chara.name} has been selected for further actions.`,
-              ephemeral: true,
-            })
-            .then((msg) => setTimeout(msg.delete, 5000));
+          interaction.followUp({
+            content: `Your character, ${chara.name} has been selected for further actions.`,
+            ephemeral: true,
+          });
         }
       }
     );

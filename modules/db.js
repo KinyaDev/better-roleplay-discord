@@ -40,6 +40,7 @@ const guildsCollection = db.collection("guilds");
 const usersCollection = db.collection("users");
 const keysCollection = db.collection("keys");
 const economyCollection = db.collection("economy");
+const activityBotCollection = db.collection("bot-activity");
 
 class KeyPlaceAPI {
   /**
@@ -110,6 +111,19 @@ class CharactersAPI {
 
       return await this.select(last._id);
     }
+  }
+
+  async setBracket(str) {
+    let selected = await this.getSelected();
+
+    if (selected) {
+      await charactersCollection.updateOne(
+        { _id: selected._id },
+        { $set: { bracket: str } }
+      );
+    }
+
+    return selected;
   }
 
   async setSpecies(species) {
@@ -532,10 +546,88 @@ class EconomyAPI {
   }
 }
 
+class BotActivityAPI {
+  constructor() {}
+
+  addInteraction(
+    params = {
+      guild_id: "",
+      commandName: "",
+      user_id: "",
+      timestamp: "",
+      options: "",
+    }
+  ) {
+    activityBotCollection.insertOne(params);
+  }
+
+  async getInteractionsDay(date) {
+    let ret = [];
+    let inters = await this.getInteractions();
+    for (let inter of inters) {
+      let date2 = new Date(parseInt(inter.timestamp));
+      let dateNum = date2.getDate();
+
+      if (dateNum === date) {
+        ret.push(inter);
+      }
+    }
+
+    return ret;
+  }
+  async getInteractions(guild_id, month) {
+    if (!guild_id && !month) {
+      return await activityBotCollection.find().toArray();
+    }
+
+    if (guild_id && month) {
+      let ret = [];
+      let inters = await this.getInteractions(guild_id);
+      for (let inter of inters) {
+        let date = new Date(parseInt(inter.timestamp));
+        let monthNum = date.getMonth();
+
+        if (monthNum === month) {
+          ret.push(inter);
+        }
+      }
+      return ret;
+    } else if (guild_id) {
+      return await activityBotCollection.find({ guild_id }).toArray();
+    } else if (month) {
+      let ret = [];
+      let inters = await this.getInteractions();
+      for (let inter of inters) {
+        let date = new Date(parseInt(inter.timestamp));
+        let monthNum = date.getMonth();
+
+        if (monthNum === month) {
+          ret.push(inter);
+        }
+      }
+
+      return ret;
+    }
+  }
+}
+
+async function parseCharaMessage(chara, db, message) {
+  let stats = await db.getStats(chara._id);
+  let msg = message.content;
+
+  stats.forEach((s, i) => {
+    msg = msg.replace(`$${i}`, `${s.name}: ${s.value}`);
+  });
+
+  return msg;
+}
+
 module.exports = {
   CharactersAPI,
   AutoProxyAPI,
   GuildAPI,
   KeyPlaceAPI,
   EconomyAPI,
+  BotActivityAPI,
+  parseCharaMessage,
 };

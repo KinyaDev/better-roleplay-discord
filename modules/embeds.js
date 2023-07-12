@@ -61,6 +61,10 @@ async function CharaEmbed(chara, member, client) {
       });
     }
 
+    if (chara.bracket) {
+      emb.addFields({ name: "💬 Bracket", value: chara.bracket });
+    }
+
     return emb.toJSON();
   }
 }
@@ -86,31 +90,45 @@ async function helpCommand(interaction) {
           name: "`unregister`",
           description: "Remove a character from your roster.",
         },
+        {
+          name: "`select`",
+          description:
+            'Make the selected character "your currently using character"',
+        },
       ],
     },
     {
       name: "🎨 Character Customization",
       commands: [
         {
-          name: "`avatar`",
+          name: "`set avatar`",
           description: "Set your character's avatar.",
         },
         {
-          name: "`species`",
+          name: "`set bracket`",
+          description:
+            "A prefix or brackets, must include `text` to match the future content to send",
+        },
+        {
+          name: "`set species`",
           description: "Define your character's species and identity.",
         },
         {
-          name: "`bio`",
+          name: "`set bio`",
           description:
             "Craft a captivating backstory or description for your character.",
         },
         {
-          name: "`species`",
+          name: "`set species`",
           description: "Define your character's species and identity.",
         },
         {
           name: "`stats-set`",
-          description: "Define custom stats for your character.",
+          description: "Redefine a custom stats for your character.",
+        },
+        {
+          name: "`stats-add`",
+          description: "Add a custom stats for your character.",
         },
         {
           name: "`stats-del`",
@@ -273,6 +291,13 @@ async function helpCommand(interaction) {
       {
         title: "F.A.Q",
         description: "There are no frequently asked questions. Ask now!",
+        fields: [
+          {
+            name: 'How do I change my "currerntly using" character?',
+            value:
+              "You can use the `/select` command, but when you select a character to show in the `characters` command, it automatically selects",
+          },
+        ],
         footer: { text: "Created by KinyaDev" },
       },
     ],

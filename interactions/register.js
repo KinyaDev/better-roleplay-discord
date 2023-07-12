@@ -33,6 +33,14 @@ module.exports = {
         .setName("bio")
         .setDescription("The bio to set to your brand new character")
         .setRequired(false)
+    )
+    .addStringOption((option) =>
+      option
+        .setName("bracket")
+        .setDescription(
+          "Tupperbox-like brackets to make speak your character, sends a message when matches"
+        )
+        .setRequired(false)
     ),
   /**
    *
@@ -47,6 +55,7 @@ module.exports = {
     let avatar = interaction.options.getAttachment("avatar");
     let bio = interaction.options.getString("bio");
     let species = interaction.options.getString("species");
+    let bracket = interaction.options.getString("bracket");
     let db = new CharactersAPI(interaction.user.id);
 
     if (avatar) {
@@ -68,6 +77,10 @@ module.exports = {
         db.setSpecies(species);
       } else {
         db.setSpecies("Human");
+      }
+
+      if (bracket) {
+        db.setBracket(bracket);
       }
 
       if (chara) {

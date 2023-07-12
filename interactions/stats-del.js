@@ -2,53 +2,58 @@ const {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   Client,
+  StringSelectMenuBuilder,
+  ActionRowBuilder,
 } = require("discord.js");
 const { CharactersAPI } = require("../modules/db");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("stats-del")
-    .setDescription("Remove stats with the /stats-del command.")
-    .addStringOption((option) =>
-      option
-        .setName("name")
-        .setDescription("The name of the stat to delete to your character")
-        .setRequired(true)
-    ),
+    .setDescription("Remove stats with the /stats-del command."),
   /**
    *
    * @param {Client} client
    * @param {ChatInputCommandInteraction} interaction
    */
   run: async (client, interaction) => {
-    let name = interaction.options.getString("name");
+    let db = new CharactersAPI(interaction.user.id);
+    let chara = await db.getSelected();
+    if (chara) {
+      let stats = await db.getStats(chara._id);
 
-    const CharaSel = await require("../modules/charaSelectMenu")(
-      interaction.user,
-      interaction
-    );
+      let selectMenu = new StringSelectMenuBuilder()
+        .setCustomId("stats-del")
+        .setPlaceholder("Select a stat to delete");
 
-    let menu = await CharaSel.genMenu();
+      stats.forEach((stat) => {
+        selectMenu.addOptions({ label: stat.name, value: stat.name });
+      });
 
-    let message = interaction.editReply({
-      content: "Select a character to set the stat",
-      components: menu.selectMenu.options.length >= 1 ? [menu.row] : null,
-      fetchReply: true,
-    });
+      if (selectMenu.options.length === 0) {
+        interaction.editReply("You have no stats to delete!");
+      } else {
+        let message = await interaction.editReply({
+          content: `Select a stat to delete`,
+          components: [new ActionRowBuilder().addComponents(selectMenu)],
+        });
 
-    let collector = CharaSel.genCollector(
-      message,
-      async (chara, charas, db) => {
-        let currentChara = await db.getSelected();
-        db.select(chara._id);
-        if (await db.setStats(name, 0)) {
-          interaction.editReply({
-            content: `Stat ${name} has been deleted for ${chara.name}.`,
-            components: [],
-          });
-        }
-        db.select(currentChara._id);
+        let collector = message.createMessageComponentCollector({
+          filter: (i) => i.user.id === interaction.user.id,
+          max: 1,
+        });
+
+        collector.on("collect", async (i) => {
+          let statName = i.values[0];
+
+          if (await db.setStats(statName, 0)) {
+            interaction.editReply({
+              content: `Stat ${statName} has been deleted for ${chara.name}.`,
+              components: [],
+            });
+          }
+        });
       }
-    );
+    }
   },
 };

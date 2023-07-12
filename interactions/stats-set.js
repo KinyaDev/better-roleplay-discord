@@ -2,18 +2,18 @@ const {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   Client,
+  ActionRowBuilder,
+  StringSelectMenuBuilder,
 } = require("discord.js");
+const { CharactersAPI } = require("../modules/db");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("stats-set")
-    .setDescription("Define custom stats with the /stats-set command.")
-    .addStringOption((option) =>
-      option
-        .setName("name")
-        .setDescription("The name of the stat to set to your character")
-        .setRequired(true)
+    .setDescription(
+      "Select a custom stat and redefine it with the /stats-set command."
     )
+
     .addNumberOption((option) =>
       option
         .setName("value")
@@ -26,35 +26,45 @@ module.exports = {
    * @param {ChatInputCommandInteraction} interaction
    */
   run: async (client, interaction) => {
-    let name = interaction.options.getString("name");
+    let db = new CharactersAPI(interaction.user.id);
+    let chara = await db.getSelected();
     let value = interaction.options.getNumber("value");
 
-    const CharaSel = await require("../modules/charaSelectMenu")(
-      interaction.user,
-      interaction
-    );
+    if (chara) {
+      let stats = await db.getStats(chara._id);
 
-    let menu = await CharaSel.genMenu();
+      let selectMenu = new StringSelectMenuBuilder()
+        .setCustomId("stats-del")
+        .setPlaceholder("Select a stat to update");
 
-    let message = interaction.editReply({
-      content: "Select a character to set the stat",
-      components: menu.selectMenu.options.length >= 1 ? [menu.row] : null,
-      fetchReply: true,
-    });
+      stats.forEach((stat) => {
+        selectMenu.addOptions({ label: stat.name, value: stat.name });
+      });
 
-    let collector = CharaSel.genCollector(
-      message,
-      async (chara, charas, db) => {
-        let currentChara = await db.getSelected();
-        db.select(chara._id);
-        if (await db.setStats(name, value)) {
-          interaction.editReply({
-            content: `Stat ${name} has been added to ${chara.name} with value ${value}`,
-            components: [],
-          });
-        }
-        db.select(currentChara._id);
+      if (selectMenu.options.length === 0) {
+        interaction.editReply("You have no stat to update!");
+      } else {
+        let message = await interaction.editReply({
+          content: `Select a stat to update`,
+          components: [new ActionRowBuilder().addComponents(selectMenu)],
+        });
+
+        let collector = message.createMessageComponentCollector({
+          filter: (i) => i.user.id === interaction.user.id,
+          max: 1,
+        });
+
+        collector.on("collect", async (i) => {
+          let statName = i.values[0];
+
+          if (await db.setStats(statName, value)) {
+            interaction.editReply({
+              content: `Stat ${statName} has been updated to ${value} for ${chara.name}.`,
+              components: [],
+            });
+          }
+        });
       }
-    );
+    }
   },
 };
